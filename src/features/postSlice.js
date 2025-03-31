@@ -31,6 +31,7 @@ export const addPost = createAsyncThunk("add/post", async (post) => {
 });
 
 export const getPostByID = createAsyncThunk("getPost/Id",async (id) =>{
+    console.log(id)
     const response = await fetch(`http://localhost:3000/posts/${id}`,{
         method:"GET",
         headers:{
@@ -39,7 +40,7 @@ export const getPostByID = createAsyncThunk("getPost/Id",async (id) =>{
     })
     if(!response.ok)
     {
-        console.log("error fetching details")
+        console.log("error fetching details",response)
     }
     const result = await response.json()
     // console.log(result.post)
@@ -52,7 +53,9 @@ export const postSlice = createSlice({
         posts:[],
         status:"idle",
         error:null,
-        PostDetails:[]
+        PostDetails:[],
+        postDetailStatus:"",
+        postDetailError:null
     },
     reducers:{},
     extraReducers: (builder) =>{
@@ -66,8 +69,15 @@ export const postSlice = createSlice({
         builder.addCase(getPosts.rejected,(state,action) =>{
             state.error = action.error.message;
         })
+        builder.addCase(getPostByID.pending,(state) =>{
+            state.postDetailStatus = "loading"
+        })
         builder.addCase(getPostByID.fulfilled,(state,action) =>{
             state.PostDetails = action.payload
+            state.postDetailStatus = "success"
+        })
+        builder.addCase(getPostByID.rejected,(state,action) =>{
+            state.postDetailError = action.error.message
         })
         builder.addCase(addPost.fulfilled,(state,action) => {
             state.posts.push(action.payload)

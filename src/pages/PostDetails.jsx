@@ -1,24 +1,23 @@
-import { useParams } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { getPostByID } from "../features/postSlice";
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import {  useSelector } from "react-redux";
 import { Avatar, IconButton } from "@material-tailwind/react";
+import { Link } from "react-router-dom";
 
 const PostDetails = () => {
-  const { id } = useParams();
-  const dispatch = useDispatch();
   const [commentDetails, setCommentDetails] = useState("");
   const [currentPostComments, setCurrentPostComments] = useState([]);
 
-  useEffect(() => {
-    if (id) {
-      dispatch(getPostByID(id));
-    }
-  }, [dispatch, id]);
 
   const post = useSelector((state) => state.post.PostDetails);
+  useEffect(() =>{
+    if(post)
+      {
+        setCurrentPostComments(post.comments)
+      }
+  })
+
   console.log(post);
 
   return (
@@ -32,7 +31,7 @@ const PostDetails = () => {
             <div className="p-3 hover:bg-gray-700 cursor-pointer rounded">Inbox</div>
             <div className="p-3 hover:bg-gray-700 cursor-pointer rounded">Profile</div>
             <div className="p-3 hover:bg-gray-700 cursor-pointer rounded">Settings</div>
-            <div className="p-3 hover:bg-gray-700 cursor-pointer rounded">Log Out</div>
+            <Link to="/" className="p-3 hover:bg-gray-700 cursor-pointer rounded">Log Out</Link>
           </nav>
         </div>
   

@@ -37,7 +37,7 @@ const routes = createBrowserRouter([
   {
     path:'userDetails/:id',
     element:<UserPage/>
-  }
+  },
 ])
 
 

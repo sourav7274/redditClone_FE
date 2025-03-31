@@ -7,20 +7,22 @@ import { addPost,  getPosts } from "../features/postSlice";
 import { Avatar } from "@material-tailwind/react";
 // import like_button from '../images/like_button.png'
 import comment from '../images/comment.png'
-import { Link, useNavigate } from "react-router-dom";
+import { Form, Link, useNavigate } from "react-router-dom";
 import { IconButton } from "@material-tailwind/react";
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { postComment } from "../features/commentSlice";
 import { getCommentsByPost } from "../features/commentSlice";
 import { clearComments } from "../features/commentSlice";
 import { likePost } from "../features/likeSlice";
-import ImageUploader from "../features/ImageUploader"
+
+import axios from "axios";
 
 
 const UserLanding = () => {
   const dispatch = useDispatch()
   const [commentId,setCommentId] = useState("")
   const [commentDetails,setDetails] = useState("")
+  const [selectedFileName,setFileName] = useState("")
   const {posts} = useSelector(state => state.post)
   const currentUser = useSelector(state => state.user.currentUser)
   const currentPostComments = useSelector(state => state.comments.comments)
@@ -121,41 +123,37 @@ const UserLanding = () => {
 
 const handlePostSubmit = async () => {
     if (newPost.author.trim() !== "") {
-      // const url = await handleImageUpload(file)
-      // if(url)
-      // {
-      //   console.log(url)
-      // }
-      // else
-      // {
-      //   console.log("error uploading image")
-      // }
-        // const formData = new FormData();
-        // formData.append("file", file); 
-        // formData.append("upload_preset", "ml_default"); 
+
+      const formData = new FormData()
+      formData.append('file',file)
+      formData.append("upload_preset", "ml_default");
         try {
-          // const response = await axios.post(
-          //   "https://api.cloudinary.com/v1_1/dqqfauejn/image/upload",
-          //   formData,
-          //   { headers: { "Content-Type": "multipart/form-data" } } 
-          // );
-          // const data = await response.data;
-          // console.log("Image uploaded:",data.url);
-          // if(data.url)
-          // {
-          //   const updatedPost = {...newPost,imgUrl:data.url}
-          //   // console.log(updatedPost)
-          //   // setPost(updatedPost)
-          //   // console.log(newPost)
-          //   dispatch(addPost(updatedPost))
-          //   setPost({
-          //   title: "",
-          //   author: currentUser ? currentUser._id : "",
-          //   description: "",
-          //   imgUrl: null,
-          //   });
-          //   dispatch(getPosts());
-          // }
+          
+          const fileResponse = await axios.post( "https://api.cloudinary.com/v1_1/dqqfauejn/image/upload",
+            formData,
+            {headers: {
+              "Content-Type" : 'multipart/form-data'
+            }}
+          )
+
+          if(fileResponse.status != 200)
+          {
+            console.log("Some Error Occured",file)
+          }
+          const fileUrl = await fileResponse.data.url
+          console.log(fileUrl)
+          if(fileUrl)
+          {
+            const updatedPost = {...newPost,imgUrl:fileUrl}
+            dispatch(addPost(updatedPost))
+            setPost({
+            title: "",
+            author: currentUser ? currentUser._id : "",
+            description: "",
+            imgUrl: null,
+            });
+            dispatch(getPosts());
+          }
         }
         catch(err){
           console.log("Error uploading image",err);
@@ -167,6 +165,12 @@ const handlePostSubmit = async () => {
   }
 
   // console.log(posts)
+
+  const handleFileChange = (e) =>{
+    setFile(e.target.files[0])
+    setFileName(e.target.files[0].name)
+  }
+  
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -234,7 +238,6 @@ const handlePostSubmit = async () => {
       </div>
         </div>
           <div className="col-span-2 px-3">
-            {/* <h1 className="text-center">Main Area</h1> */}
             <div className="my-3">
             <div className="max-w-3xl  bg-redditBlack p-6 rounded-2xl shadow-md">
               <h2 className="text-xl font-semibold text-white mb-4">Create a Post</h2>
@@ -256,8 +259,16 @@ const handlePostSubmit = async () => {
               ></textarea>
               <div className="flex items-center justify-between mt-4">
                 <label className="flex items-center gap-2 cursor-pointer text-red-400 ">
-                 <ImageUploader />                 
+                <div>
+                  <input type="file" onChange={handleFileChange} className="hidden" />
+                  <span className="text-sm font-medium"><Avatar src={"https://img.icons8.com/?size=100&id=RxzRPd8sH7Ru&format=png&color=000000"} /> Add Image</span>           
+                </div>
                 </label>
+                {selectedFileName && (
+                  <span className="text-sm text-white truncate">
+                    {selectedFileName}
+                  </span>
+                )}
                 <button onClick={() => handlePostSubmit()} className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
                   Post
                 </button>
