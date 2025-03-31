@@ -15,7 +15,7 @@ const Header = () => {
           About
         </Link>
         <Link to="/contact" className="mx-2 text-white">
-          Contact
+          Contact Yolo
         </Link>
       </nav>
     </header>
