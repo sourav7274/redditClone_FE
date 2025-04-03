@@ -4,18 +4,16 @@ import { useNavigate } from "react-router-dom";
 import { getPostByID } from "../features/postSlice";
 import { useDispatch } from "react-redux";
 const UserPage = () => {
-
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const currentUser = useSelector((state) => state.user.currentUser);
   // console.log(currentUser);
 
-
-  const handleNavigate =(id) =>{
-    console.log(id)
-    dispatch(getPostByID(id))
-     navigate(`/post/${id}`)
-  }
+  const handleNavigate = (id) => {
+    console.log(id);
+    dispatch(getPostByID(id));
+    navigate(`/post/${id}`);
+  };
 
   return (
     <>
@@ -70,20 +68,21 @@ const UserPage = () => {
                 </h3>
                 <div className="grid grid-cols-1 gap-3">
                   {currentUser.posts.map((post) => (
-                      <div
+                    <div
                       onClick={() => handleNavigate(post._id)}
-                        key={post._id}
-                        className="bg-red-500 text-white p-3 rounded-md shadow-md"
-                      >
-                        { console.log(post)}
-                        <p>{post.title}</p>
-                      </div>                  
+                      key={post._id}
+                      className="bg-red-500 text-white p-3 rounded-md shadow-md"
+                    >
+                      {/* { console.log(post)} */}
+                      <p>{post.title}</p>
+                    </div>
                   ))}
                 </div>
               </div>
             )}
 
             {/* Comments */}
+            {console.log(currentUser.comments)}
             {currentUser.comments?.length > 0 && (
               <div className="mt-6">
                 <h3 className="text-xl font-semibold text-green-400">
@@ -91,25 +90,25 @@ const UserPage = () => {
                 </h3>
                 <div className="grid grid-cols-1 gap-3">
                   {currentUser.comments.map((comment) => (
-                      <div
+                    <div
                       onClick={() => handleNavigate(comment.postId._id)}
-                        key={comment._id}
-                        className="bg-green-500 text-white p-3 rounded-md shadow-md"
-                      >
-                        <p>
-                          {comment.content} on{" "}
-                          <span className="font-semibold">
-                            {comment.postId.title}
-                          </span>
-                        </p>
-                      </div>
-                 
+                      key={comment._id}
+                      className="bg-green-500 text-white p-3 rounded-md shadow-md"
+                    >
+                      <p>
+                        {comment.content} on{" "}
+                        <span className="font-semibold">
+                          {comment.postId.title}
+                        </span>
+                      </p>
+                    </div>
                   ))}
                 </div>
               </div>
             )}
 
             {/* Liked Posts */}
+            {console.log(currentUser.likedPosts)}
             {currentUser.likedPosts?.length > 0 && (
               <div className="mt-6">
                 <h3 className="text-xl font-semibold text-blue-400">
@@ -117,26 +116,28 @@ const UserPage = () => {
                 </h3>
                 <div className="grid grid-cols-1 gap-3">
                   {currentUser.likedPosts.map((like) => (
-                   
-                      <div
+                    <div
                       onClick={() => handleNavigate(like.postId._id)}
-                        key={like._id}
-                        className="bg-blue-500 text-white p-3 rounded-md shadow-md"
-                      >
-                        <p>
-                          Liked{" "}
-                          <span className="font-semibold">
-                            {like.postId.title}
-                          </span>{" "}
-                          by{" "}
-                          <span className="italic">
-                          </span>
-                        </p>
-                        {console.log("Like details",like)}
-                      </div>
-                  
+                      key={like._id}
+                      className="bg-blue-500 text-white p-3 rounded-md shadow-md"
+                    >
+                      {console.log(like)}
+                      <p>
+                        Liked{" "}
+                        <span className="font-semibold">
+                          {like.postId.title}
+                        </span>{" "}
+                        by{" "}
+                        <span className="italic">
+                          {like.postId.author
+                            ? like.postId.author.name
+                            : "Unknown Author"}
+                        </span>
+                      </p>
+                    </div>
                   ))}
                 </div>
+                
               </div>
             )}
           </div>

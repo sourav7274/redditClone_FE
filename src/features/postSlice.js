@@ -9,7 +9,7 @@ export const getPosts = createAsyncThunk("get/posts",async () =>{
     return data.posts;
 })
 
-export const addPost = createAsyncThunk("add/post", async (post) => {
+export const addPost = createAsyncThunk("add/post", async (post,{dispatch}) => {
     try {
         const response = await fetch("http://localhost:3000/post", {
             method: "POST",
@@ -24,7 +24,8 @@ export const addPost = createAsyncThunk("add/post", async (post) => {
         }
 
         const data = await response.json();
-        return data.newPost; // Return only the required part
+        dispatch(getPosts()); 
+        return data.newPost; 
     } catch (error) {
        console.log("Error adding post",error);
     }

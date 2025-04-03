@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 
-export const likePost = createAsyncThunk("like/posts",async(data) =>{
+export const likePost = createAsyncThunk("like/posts",async(data,{dispatch}) =>{
    const response = await fetch(`http://localhost:3000/likepost`,{
     method:"POST",
     headers:{
