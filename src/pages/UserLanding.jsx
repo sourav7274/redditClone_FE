@@ -34,12 +34,11 @@ const UserLanding = () => {
     imgUrl: null,
     description: "",
   });
-  console.log("liked posts", likedPosts);
+  console.log("firest load", currentUser);
   const handlePostCreator = (e) => {
     const { name, value } = e.target;
     // console.log(name,value)
     // console.log(e.target.name,e.target.value)
-
     setPost((pval) => ({
       ...pval,
       [name]: value,
@@ -71,6 +70,7 @@ const UserLanding = () => {
 
   useEffect(() => {
     dispatch(getPosts(currentUser?._id));
+    console.log(currentUser);
   }, [currentUser]);
 
   // console.log(posts[0])
@@ -497,9 +497,12 @@ const UserLanding = () => {
                               whileHover="whileHover"
                               transition="transition"
                               key={comment._id}
-                              className="my-2 bg-gray-600 px-4 py-1"
+                              className="my-2 bg-gray-800 ps-4 py-2 rounded-lg"
                             >
-                              <li>{comment.content}</li>
+                              <Link onClick={() => handlePostDetails(comment?.postId?._id)}>
+                                 <li>{comment.content} on {comment?.postId?.author?.name}'s post {comment?.postId?.title} </li>
+                           
+                              </Link>
                             </motion.div>
                           ))}
                       </ul>
@@ -559,11 +562,9 @@ const UserLanding = () => {
                               whileHover="whileHover"
                               transition="transition"
                               key={post._id}
-                              className=" bg-gray-800 px-4 py-1 my-2"
+                              className="my-2 bg-gray-800 ps-4 py-2 rounded-lg"
                             >
-                              <Link
-                                onClick={() => handlePostDetails(post._id)}
-                              >
+                              <Link onClick={() => handlePostDetails(post._id)}>
                                 <li>{post.title}</li>
                               </Link>
                             </motion.div>
@@ -624,10 +625,10 @@ const UserLanding = () => {
                               initial="initial"
                               whileHover="whileHover"
                               key={post._id}
-                              className="my-2 bg-gray-900 ps-4 py-2 rounded-lg"
+                              className="my-2 bg-gray-800 ps-4 py-2 rounded-lg"
                             >
-                              <Link to={`/post/${post._id}`}>
-                                <li>{post.postId.title}</li>
+                              <Link onClick={() => handlePostDetails(post?._id)}>
+                                <li>{post?.author?.name}'s post - {post?.title}</li>
                               </Link>
                             </motion.div>
                           ))}

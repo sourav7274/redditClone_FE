@@ -17,7 +17,7 @@ const PostDetails = () => {
       setCurrentPostComments(post,post.comments);
     }
   }, [post]);
-  console.log(post.name)
+  console.log(post?.title)
   // const postDetails = sessionStorage.getItem("post");
   // console.log(postDetails);
   useEffect(() => {
@@ -66,7 +66,7 @@ const PostDetails = () => {
                     />
                   )}
 
-                  <div className="flex items-center mt-3">
+                  <div className="flex items-center mt-3 mb-5">
                     <IconButton
                       color="blue"
                       size="sm"
@@ -76,8 +76,6 @@ const PostDetails = () => {
                       <i className="fas fa-heart" />
                     </IconButton>
                   </div>
-
-                  <h3 className="mt-6">Comment Section</h3>
 
                   {currentPostComments?.length > 0 ? (
                     <ul className="mt-3">

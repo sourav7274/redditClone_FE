@@ -180,7 +180,7 @@ const UserPage = () => {
                       className="bg-red-500 text-white p-3 rounded-md shadow-md"
                     >
                       {/* { console.log(post)} */}
-                      <p>{post.title}</p>
+                      <p className="font-semibold">{post.title}</p>
                     </div>
                   ))}
                 </div>
@@ -223,22 +223,12 @@ const UserPage = () => {
                 <div className="grid grid-cols-1 gap-3">
                   {currentUser.likedPosts.map((like) => (
                     <div
-                      onClick={() => handleNavigate(like.postId._id)}
+                      onClick={() => handleNavigate(like?._id)}
                       key={like._id}
                       className="bg-blue-500 text-white p-3 rounded-md shadow-md"
                     >
-                      {/* {console.log(like)} */}
                       <p>
-                        Liked{" "}
-                        <span className="font-semibold">
-                          {like.postId.title}
-                        </span>{" "}
-                        by{" "}
-                        <span className="italic">
-                          {like.postId.author
-                            ? like.postId.author.name
-                            : "Unknown Author"}
-                        </span>
+                       <span className="font-semibold">{like?.author?.name}</span>'s post  <span className="font-semibold">{like?.title}</span>
                       </p>
                     </div>
                   ))}
