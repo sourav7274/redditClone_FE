@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import axios from "axios";
 
 export const addUser = createAsyncThunk("add/User", async (user) => {
   const response = await fetch("http://localhost:3000/signUp", {
@@ -15,6 +16,8 @@ export const addUser = createAsyncThunk("add/User", async (user) => {
   return data;
 });
 
+const storedUser = sessionStorage.getItem("user");
+
 export const loginUser = createAsyncThunk("login/User", async (user) => {
   const response = await fetch("http://localhost:3000/signIn", {
     method: "POST",
@@ -30,6 +33,7 @@ export const loginUser = createAsyncThunk("login/User", async (user) => {
     else console.log("Error logging in", response);
   } else {
     const data = await response.json();
+    sessionStorage.setItem("user", JSON.stringify(data.user));
     // console.log(data);
     return data.user;
   }
@@ -44,11 +48,44 @@ export const getUser = createAsyncThunk("get/User", async () => {
   return data.user;
 });
 
+export const getCurrentUser = createAsyncThunk(
+  "get/currentUSer",
+  async (id) => {
+    const response = await fetch(`http://localhost:3000/users/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (!response.ok) {
+      console.log("Error fetching data");
+    }
+    const data = await response.json();
+    sessionStorage.setItem("user", JSON.stringify(data.user));
+    // console.log("function called",data)
+    return data.user;
+  }
+);
+
+export const getOtherUSers = createAsyncThunk("get/otherUsers", async (id) => {
+  const { data } = await axios.get("http://localhost:3000/otherUsers", {
+    params: { id },
+  });
+  return data;
+});
+
+export const getLikedPosts = createAsyncThunk("get/likedPosts",async (id ) =>{
+  const response = await axios.get(`http://localhost:3000/user/${id}/like-posts`)
+  return response?.data?.likedPostIds
+}) 
+
 export const userSlice = createSlice({
   name: "user",
   initialState: {
     users: [],
-    currentUser: null,
+    currentUser: storedUser ? JSON.parse(storedUser) : null,
+    likedPosts:[],
+    otherUser: [],
     status: "idle",
     error: null,
   },
@@ -83,6 +120,15 @@ export const userSlice = createSlice({
     builder.addCase(loginUser.fulfilled, (state, action) => {
       state.currentUser = action.payload;
     });
+    builder.addCase(getCurrentUser.fulfilled, (state, action) => {
+      state.currentUser = action.payload;
+    });
+    builder.addCase(getOtherUSers.fulfilled, (state, action) => {
+      state.otherUser = action.payload;
+    });
+    builder.addCase(getLikedPosts.fulfilled,(state,action) =>{
+      state.likedPosts = action.payload
+    })
   },
 });
 

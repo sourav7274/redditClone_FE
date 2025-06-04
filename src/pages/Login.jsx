@@ -4,8 +4,7 @@ import { Typography, Input, Button } from "@material-tailwind/react";
 import { EyeSlashIcon, EyeIcon } from "@heroicons/react/24/solid";
 import { useDispatch } from "react-redux";
 import { loginUser } from "../features/userSlice";
-
-
+import { motion } from "motion/react";
 
 export default function Login() {
   const dispatch = useDispatch();
@@ -13,39 +12,38 @@ export default function Login() {
   const [passwordShown, setPasswordShown] = useState(false);
   const togglePasswordVisiblity = () => setPasswordShown((cur) => !cur);
 
-  const [loginDate,setData] = useState({
-    email:"",
-    password:""
-  })
+  const [loginDate, setData] = useState({
+    email: "",
+    password: "",
+  });
 
-  const handleChange = (e) =>{
-    const {name,value} = e.target;
+  const handleChange = (e) => {
+    const { name, value } = e.target;
     setData((prev) => {
       return {
         ...prev,
-        [name]:value
-      }
-    })
-  }
+        [name]: value,
+      };
+    });
+  };
 
   const verifyUser = async () => {
     if (loginDate.email == "" || loginDate.password == "") {
-        alert("Please enter all the details");
+      alert("Please enter all the details");
     } else {
-        const result = await dispatch(loginUser(loginDate)); 
-        // console.log("Login Result:", result); 
+      const result = await dispatch(loginUser(loginDate));
+      // console.log("Login Result:", result);
 
-        if (result.payload) { 
-            navigate(`/user/${result.payload._id}`);
-        } else {
-            console.log("Error logging in");
-        }
+      if (result.payload) {
+        navigate(`/user/${result.payload._id}`);
+      } else {
+        console.log("Error logging in");
+      }
     }
     // console.log(loginDate)
-   
-  }
+  };
   return (
-    <section className="grid bg-blue-gray-100 text-center h-screen items-center p-8">
+    <section className="grid bg-blue-gray-100  text-center h-screen items-center p-8">
       <div>
         <Typography variant="h3" color="blue-gray" className="mb-2">
           Sign In
@@ -55,9 +53,7 @@ export default function Login() {
         </Typography>
         <form action="#" className="mx-auto max-w-[24rem] text-left">
           <div className="mb-6">
-            <label htmlFor="email">
-             Your Email
-            </label>
+            <label htmlFor="email">Your Email</label>
             <Input
               onChange={(e) => handleChange(e)}
               id="email"
@@ -106,15 +102,27 @@ export default function Login() {
               }
             />
           </div>
-          
+
           {/* <Link to="/user">
               Login
           </Link> */}
+          <motion.div
+          whileHover={{ 
+            scale: 1.05, 
+            textShadow:"0px 0px 8px rgb(20, 184, 166)",
+            boxShadow:"0px 0px 8px rgb(20, 184, 166)"
+            }}>
+            <Button
+              onClick={() => verifyUser()}
+              color="gray"
+              size="lg"
+              className="mt-6"
+              fullWidth
+            >
+              Sign in
+            </Button>
+          </motion.div>
 
-          <Button onClick={() => verifyUser() } color="gray" size="lg" className="mt-6" fullWidth>
-            Sign in
-          </Button>
-    
           <div className="!mt-4 flex justify-end">
             <Typography
               as="a"
@@ -154,4 +162,3 @@ export default function Login() {
     </section>
   );
 }
-

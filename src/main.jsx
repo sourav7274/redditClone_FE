@@ -11,6 +11,7 @@ import store from "./store/store";
 import { Provider } from "react-redux";
 import PostDetails from "./pages/PostDetails";
 import UserPage from "./pages/UserDetails";
+import Inbox from "./pages/Inbox";
 
 
 const routes = createBrowserRouter([
@@ -38,6 +39,10 @@ const routes = createBrowserRouter([
     path:'userDetails/:id',
     element:<UserPage/>
   },
+  {
+    path:"/inbox",
+    element:<Inbox/>
+  }
 ])
 
 

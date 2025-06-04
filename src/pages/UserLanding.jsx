@@ -1,10 +1,8 @@
 import Footer from "../components/Footer";
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useState } from "react";
-import { addPost, getPosts } from "../features/postSlice";
-// import { getUser } from "../features/userSlice";
+import { addPost, getPosts, getPostByID } from "../features/postSlice";
 import { Avatar } from "@material-tailwind/react";
-// import like_button from '../images/like_button.png'
 import comment from "../images/comment.png";
 import { Link } from "react-router-dom";
 import { IconButton } from "@material-tailwind/react";
@@ -13,17 +11,21 @@ import { postComment } from "../features/commentSlice";
 import { getCommentsByPost } from "../features/commentSlice";
 import { clearComments } from "../features/commentSlice";
 import { likePost } from "../features/likeSlice";
-import { updateUserActivities } from "../features/userSlice"; // Import action to update user activities
-
+import { updateUserActivities, getLikedPosts } from "../features/userSlice"; // Import action to update user activities
+import { motion } from "motion/react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import Sidebar from "../components/SideBar";
 
 const UserLanding = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [commentId, setCommentId] = useState("");
   const [commentDetails, setDetails] = useState("");
   const [selectedFileName, setFileName] = useState("");
+  const { likedPosts } = useSelector((state) => state.user);
   const { posts } = useSelector((state) => state.post);
-  const currentUser = useSelector((state) => state.user.currentUser);
+  const { currentUser } = useSelector((state) => state.user);
   const currentPostComments = useSelector((state) => state.comments.comments);
   const [file, setFile] = useState(null);
   const [newPost, setPost] = useState({
@@ -32,7 +34,7 @@ const UserLanding = () => {
     imgUrl: null,
     description: "",
   });
-
+  console.log("liked posts", likedPosts);
   const handlePostCreator = (e) => {
     const { name, value } = e.target;
     // console.log(name,value)
@@ -64,7 +66,11 @@ const UserLanding = () => {
   };
 
   useEffect(() => {
-    dispatch(getPosts());
+    dispatch(getLikedPosts(currentUser?._id));
+  }, [currentUser]);
+
+  useEffect(() => {
+    dispatch(getPosts(currentUser?._id));
   }, [currentUser]);
 
   // console.log(posts[0])
@@ -138,7 +144,6 @@ const UserLanding = () => {
             console.log("Some Error Occured", file);
           }
           const fileUrl = await fileResponse.data.url;
-          console.log(fileUrl);
           if (fileUrl) {
             const updatedPost = { ...newPost, imgUrl: fileUrl };
             dispatch(addPost(updatedPost));
@@ -180,13 +185,32 @@ const UserLanding = () => {
     setFileName(e.target.files[0].name);
   };
 
+  const handlePostDetails = (id) => {
+    dispatch(getPostByID(id));
+    navigate(`/post/${id}`);
+  };
+  const listVariants = {
+    initial: {
+      scale: 1,
+    },
+    animate: {
+      transition: {
+        stiffness: 100,
+      },
+    },
+    whileHover: {
+      scale: 1.3,
+      color: "red",
+      originX: 0,
+    },
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* <Header /> */}
-
       <main className="flex-grow  text-white bg-redditBlack">
         <div className="grid grid-cols-4">
-          <div className="bg-redditBlack text-white p-4">
+          <div className=" p-4">
             <h3>
               {currentUser && currentUser.name ? (
                 <>
@@ -198,76 +222,7 @@ const UserLanding = () => {
                 </>
               )}{" "}
             </h3>
-            <div className="relative flex h-[calc(100vh-2rem)] w-full max-w-[20rem] flex-col rounded-xl bg-clip-border shadow-xl shadow-blue-gray-900/5">
-              {/* <div className="p-4 mb-2">
-          <h5 className="text-xl font-semibold text-gray-300">Sidebar</h5>
-        </div> */}
-              <nav className="flex min-w-[240px] flex-col gap-1 p-2 text-base text-gray-300">
-                {/* E-Commerce */}
-                {/* <div className="relative">
-            <button
-              onClick={() => toggleDropdown("ecommerce")}
-              className="flex items-center justify-between w-full p-3 text-xl font-semibold border-b-0 text-gray-300 hover:text-blue-gray-900"
-            >
-              <div className="grid mr-4 place-items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="w-5 h-5"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 004.25 22.5h15.5a1.875 1.875 0 001.865-2.071l-1.263-12a1.875 1.875 0 00-1.865-1.679H16.5V6a4.5 4.5 0 10-9 0zM12 3a3 3 0 00-3 3v.75h6V6a3 3 0 00-3-3zm-3 8.25a3 3 0 106 0v-.75a.75.75 0 011.5 0v.75a4.5 4.5 0 11-9 0v-.75a.75.75 0 011.5 0v.75z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <p className="mr-auto">E-Commerce</p>
-              <span className={`ml-4 transition-transform ${openDropdown === "ecommerce" ? "rotate-180" : ""}`}>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="2.5"
-                  stroke="currentColor"
-                  className="w-4 h-4 mx-auto"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"></path>
-                </svg>
-              </span>
-            </button>
-            {openDropdown === "ecommerce" && (
-              <div className="ml-6">
-                <div className="p-2 hover:bg-gray-700 cursor-pointer">Orders</div>
-                <div className="p-2 hover:bg-gray-700 cursor-pointer">Products</div>
-              </div>
-            )}
-          </div> */}
-
-                {/* Other Links */}
-                <div className="p-3 hover:bg-gray-700 cursor-pointer rounded">
-                  Inbox
-                </div>
-                {currentUser && (
-                  <Link
-                    to={`/userDetails/${currentUser._id}`}
-                    className="p-3 hover:bg-gray-700 cursor-pointer rounded"
-                  >
-                    Profile
-                  </Link>
-                )}
-                <div className="p-3 hover:bg-gray-700 cursor-pointer rounded">
-                  Settings
-                </div>
-                <Link
-                  to="/"
-                  className="p-3 hover:bg-gray-700 cursor-pointer rounded"
-                >
-                  Log Out
-                </Link>
-              </nav>
-            </div>
+            <Sidebar user={currentUser} />
           </div>
           {/* Add a Post Section */}
           <div className="col-span-2 px-3">
@@ -343,20 +298,25 @@ const UserLanding = () => {
 
                     <p className="text-[30px] mt-2 mb-3">{post.title}</p>
                     <p>{post.description}</p>
-                    <img
-                      className="h-98 w-full rounded-lg object-cover"
-                      src={post.imgUrl}
-                      alt="Post Image"
-                    />
+                    {post?.imgUrl !== null && (
+                      <img
+                        className="h-98 w-full rounded-lg object-cover"
+                        src={post.imgUrl}
+                        alt="Post Image"
+                      />
+                    )}
                     <span className="inline-flex mt-3 mb-1">
                       {/* <div className="hover:cursor-pointer"><Avatar src={like_button} className="me-3" size="sm"/></div>  */}
                       <div className="hover:cursor-pointer">
                         <IconButton
-                          color="blue"
-                          size="sm"
+                          size="small"
                           onClick={() => likeHandler(post._id)}
                           className="rounded-full me-5"
-                          ripple={true}
+                          color={
+                            likedPosts.includes(post._id)
+                              ? "deep-orange"
+                              : "black"
+                          }
                         >
                           <i className="fas fa-heart" />
                         </IconButton>
@@ -375,8 +335,7 @@ const UserLanding = () => {
                         display: commentId == post._id ? "block" : "none",
                       }}
                     >
-                      <h3>Comment Section</h3>
-                      <div>
+                      <div className="mt-4">
                         <span className="inline-flex">
                           <Avatar
                             className="me-3"
@@ -422,7 +381,9 @@ const UserLanding = () => {
                             </ul>
                           </>
                         ) : (
-                          <p className="bg-brown-500">Empty Comment Section</p>
+                          <p className="bg-gray-700 rounded-xl text-center py-2 mt-4 mb-3">
+                            Empty Comment Section
+                          </p>
                         )}
                       </div>
                     </div>
@@ -431,7 +392,7 @@ const UserLanding = () => {
                 ))}
             </div>
           </div>
-          <div className="bg-gray-700 ps-3">
+          <div className="bg-redditBlack ps-3 overflow-hidden">
             {/* <p>User Suggestions/activites</p>
            <h2>Popular near you</h2> */}
             <div>
@@ -527,14 +488,20 @@ const UserLanding = () => {
                           </svg>
                         </span>
                       </button>
-                      <ul className="text-black">
+                      <ul>
                         {currentUser &&
                           openDropdown.comments &&
-                          currentUser.comments
-                            .slice(-3)
-                            .map((comment) => (
-                              <li key={comment._id}>{comment.content}</li>
-                            ))}
+                          currentUser.comments.slice(-3).map((comment) => (
+                            <motion.div
+                              variants={listVariants}
+                              whileHover="whileHover"
+                              transition="transition"
+                              key={comment._id}
+                              className="my-2 bg-gray-600 px-4 py-1"
+                            >
+                              <li>{comment.content}</li>
+                            </motion.div>
+                          ))}
                       </ul>
                     </section>
 
@@ -583,13 +550,23 @@ const UserLanding = () => {
                         </span>
                       </button>
 
-                      <ul className="text-black">
+                      <ul>
                         {currentUser &&
                           openDropdown.posts &&
                           currentUser.posts.slice(-3).map((post) => (
-                            <Link key={post._id} to={`/post/${post._id}`}>
-                              <li>{post.title}</li>
-                            </Link>
+                            <motion.div
+                              variants={listVariants}
+                              whileHover="whileHover"
+                              transition="transition"
+                              key={post._id}
+                              className=" bg-gray-800 px-4 py-1 my-2"
+                            >
+                              <Link
+                                onClick={() => handlePostDetails(post._id)}
+                              >
+                                <li>{post.title}</li>
+                              </Link>
+                            </motion.div>
                           ))}
                       </ul>
                     </section>
@@ -637,13 +614,22 @@ const UserLanding = () => {
                           </svg>
                         </span>
                       </button>
-                      <ul className="text-black">
+                      <ul>
                         {currentUser &&
                           openDropdown.likes &&
                           currentUser.likedPosts.map((post) => (
-                            <Link key={post._id} to={`/post/${post._id}`}>
-                              <li>{post.postId.title}</li>
-                            </Link>
+                            <motion.div
+                              variants={listVariants}
+                              animate="animate"
+                              initial="initial"
+                              whileHover="whileHover"
+                              key={post._id}
+                              className="my-2 bg-gray-900 ps-4 py-2 rounded-lg"
+                            >
+                              <Link to={`/post/${post._id}`}>
+                                <li>{post.postId.title}</li>
+                              </Link>
+                            </motion.div>
                           ))}
                       </ul>
                     </section>

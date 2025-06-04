@@ -1,51 +1,42 @@
-import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Avatar, IconButton } from "@material-tailwind/react";
 import { Link } from "react-router-dom";
+import { setPostDetails } from "../features/postSlice";
+import Slider from "@material-tailwind/react";
+import Sidebar from "../components/SideBar";
 
 const PostDetails = () => {
-  const [commentDetails, setCommentDetails] = useState("");
   const [currentPostComments, setCurrentPostComments] = useState([]);
-
-  const post = useSelector((state) => state.post.PostDetails);
+  const { currentUser } = useSelector((state) => state.user);
+  const dispatch = useDispatch();
+  let post = useSelector((state) => state.post.PostDetails);
   useEffect(() => {
-    if (post) {
-      setCurrentPostComments(post.comments);
+    if (post && post.comments) {
+      setCurrentPostComments(post,post.comments);
     }
-  });
+  }, [post]);
+  console.log(post.name)
+  // const postDetails = sessionStorage.getItem("post");
+  // console.log(postDetails);
+  useEffect(() => {
+    if (post == null) {
+      const postDetails = sessionStorage.getItem("post");
+      if (postDetails) {
+        dispatch(setPostDetails(JSON.parse(postDetails)));
+      }
+    }
+  }, [post, dispatch]);
 
-  console.log(post);
 
+  // console.log(post.comments[0].userId.usrImgUrl);
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-grow text-white bg-redditBlack">
         <div className="grid grid-cols-4 gap-4">
           {/* Left Sidebar */}
-          <div
-            style={{ width: "350px" }}
-            className="bg-redditBlack text-white p-4 "
-          >
-            <h1>Navigation Area</h1>
-            <nav className="flex min-w-[240px] flex-col gap-1 p-2 text-base text-gray-300">
-              <div className="p-3 hover:bg-gray-700 cursor-pointer rounded">
-                Inbox
-              </div>
-              <div className="p-3 hover:bg-gray-700 cursor-pointer rounded">
-                Profile
-              </div>
-              <div className="p-3 hover:bg-gray-700 cursor-pointer rounded">
-                Settings
-              </div>
-              <Link
-                to="/"
-                className="p-3 hover:bg-gray-700 cursor-pointer rounded"
-              >
-                Log Out
-              </Link>
-            </nav>
-          </div>
+        <Sidebar user={currentUser} />
 
           {/* Main Content - Takes Remaining Space */}
           <div className="pt-4 col-span-2">
@@ -87,31 +78,18 @@ const PostDetails = () => {
                   </div>
 
                   <h3 className="mt-6">Comment Section</h3>
-                  <textarea
-                    value={commentDetails}
-                    onChange={(e) => setCommentDetails(e.target.value)}
-                    className="bg-gray-800 rounded-xl p-4 w-full mt-2"
-                    placeholder="Write a comment..."
-                  />
-                  <button
-                    onClick={() => console.log("Comment Submitted")}
-                    className="mt-3 bg-red-500 rounded px-4 py-2"
-                  >
-                    Post
-                  </button>
 
-                  {currentPostComments.length > 0 ? (
+                  {currentPostComments?.length > 0 ? (
                     <ul className="mt-3">
                       {currentPostComments.map((comm) => (
                         <li
                           key={comm._id}
-                          className="bg-gray-800 p-2 rounded my-1"
+                          className="bg-gray-800 py-2 px-4 rounded my-1"
                         >
-                          <p>{comm.content}</p>
-                          <p>Post Title: {comm.postId?.title || "Unknown"}</p>
-                          <p>
-                            Author: {comm.postId?.author?.name || "Unknown"}
-                          </p>
+                          <div className="flex gap-4">
+                            <Avatar src={comm.userId.usrImgUrl} size="xs" />
+                            <p>{comm.content}</p>
+                          </div>
                         </li>
                       ))}
                     </ul>

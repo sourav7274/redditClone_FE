@@ -26,7 +26,6 @@ export function Registration() {
 
   const registerButton = (e) =>{
     e.preventDefault();
-    console.log(newUser)
    const attempt =  dispatch(addUser(newUser))
     console.log(attempt)
   }

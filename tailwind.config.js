@@ -8,7 +8,8 @@ module.exports = withMT({
   theme: {
     extend: {
       colors:{
-        redditBlack: "rgb(14, 17, 19)"
+        redditBlack: "rgb(14, 17, 19)",
+        trailRed: "rgb(230, 57, 70)"
       }
     },
   },
