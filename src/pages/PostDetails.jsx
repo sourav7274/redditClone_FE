@@ -14,7 +14,7 @@ const PostDetails = () => {
   let post = useSelector((state) => state.post.PostDetails);
   useEffect(() => {
     if (post && post.comments) {
-      setCurrentPostComments(post,post.comments);
+      setCurrentPostComments(post.comments);
     }
   }, [post]);
   console.log(post?.title)
@@ -29,7 +29,7 @@ const PostDetails = () => {
     }
   }, [post, dispatch]);
 
-
+  console.log("another test",currentPostComments)
   // console.log(post.comments[0].userId.usrImgUrl);
   return (
     <div className="min-h-screen flex flex-col">

@@ -41,7 +41,7 @@ export const addPost = createAsyncThunk(
 );
 
 export const getPostByID = createAsyncThunk("getPost/Id", async (id) => {
-  const response = await fetch(`http://localhost:3000/posts/${id}`, {
+  const response = await fetch(`http://localhost:3000/postById/${id}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -51,9 +51,9 @@ export const getPostByID = createAsyncThunk("getPost/Id", async (id) => {
     console.log("error fetching details", response);
   }
   const result = await response.json();
-  console.log(result)
-  sessionStorage.setItem("post", JSON.stringify(result.posts[0]));
-  return result.posts[0];
+  console.log("post data here",result)
+  sessionStorage.setItem("post", JSON.stringify(result.post));
+  return result.post;
 });
 
 export const postSlice = createSlice({

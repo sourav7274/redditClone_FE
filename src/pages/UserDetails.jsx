@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { getPostByID } from "../features/postSlice";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
-import { getCurrentUser } from "../features/userSlice";
+import { getCurrentUser,updateUser } from "../features/userSlice";
 import { useState } from "react";
 import Sidebar from "../components/SideBar";
 
@@ -37,7 +37,21 @@ const UserPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(update);
+    let finalUpdate ={
+    name: update.name || currentUser.name ,
+    age:  update.age || currentUser.age,
+    email:  update.email || currentUser.email,
+    password: update.password || currentUser.password ,
+    usrImgUrl: update.usrImgUrl || currentUser.usrImgUrl,
+    }
+    console.log(finalUpdate);
+    dispatch(updateUser({data:finalUpdate,id:currentUser._id})).then((res) =>{
+      if(res?.payload == 201)
+      {
+        console.log("updating user details")
+        dispatch(getCurrentUser(currentUser._id))
+      }
+    })
   };
 
   useEffect(() => {
@@ -137,22 +151,6 @@ const UserPage = () => {
                   className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-
-              <div>
-                <label htmlFor="usrImgUrl" className="block mb-1 font-medium">
-                  User Image URL
-                </label>
-                <input
-                  type="text"
-                  id="usrImgUrl"
-                  name="usrImgUrl"
-                  onChange={(e) => handleChange(e)}
-                  value={update.usrImgUrl}
-                  placeholder={currentUser.usrImgUrl}
-                  className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
               <button
                 type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition-colors"

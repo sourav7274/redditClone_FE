@@ -51,6 +51,7 @@ export const getUser = createAsyncThunk("get/User", async () => {
 export const getCurrentUser = createAsyncThunk(
   "get/currentUSer",
   async (id) => {
+    console.log("here")
     const response = await fetch(`http://localhost:3000/users/${id}`, {
       method: "GET",
       headers: {
@@ -78,6 +79,11 @@ export const getLikedPosts = createAsyncThunk("get/likedPosts",async (id ) =>{
   const response = await axios.get(`http://localhost:3000/user/${id}/like-posts`)
   return response?.data?.likedPostIds
 }) 
+
+export const updateUser  = createAsyncThunk("update/user",async ({data,id}) =>{
+  const response = await axios.put(`http://localhost:3000/user/${id}/updateDetails`,data)
+  return response.status
+})
 
 export const userSlice = createSlice({
   name: "user",

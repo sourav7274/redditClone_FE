@@ -26,7 +26,7 @@ const UserLanding = () => {
   const { likedPosts } = useSelector((state) => state.user);
   const { posts } = useSelector((state) => state.post);
   const { currentUser } = useSelector((state) => state.user);
-  const currentPostComments = useSelector((state) => state.comments.comments);
+  const {comments,loading} = useSelector((state) => state.comments);
   const [file, setFile] = useState(null);
   const [newPost, setPost] = useState({
     title: "",
@@ -34,7 +34,6 @@ const UserLanding = () => {
     imgUrl: null,
     description: "",
   });
-  console.log("firest load", currentUser);
   const handlePostCreator = (e) => {
     const { name, value } = e.target;
     // console.log(name,value)
@@ -48,7 +47,7 @@ const UserLanding = () => {
   };
 
   // console.log(currentUser)
-  // console.log(currentPostComments)
+  // console.log(comments)
 
   const [openDropdown, setOpenDropdown] = useState({
     activity: false,
@@ -187,6 +186,7 @@ const UserLanding = () => {
 
   const handlePostDetails = (id) => {
     dispatch(getPostByID(id));
+    console.log("testing here",id)
     navigate(`/post/${id}`);
   };
   const listVariants = {
@@ -358,10 +358,11 @@ const UserLanding = () => {
                             Post
                           </button>
                         </span>
-                        {currentPostComments.length > 0 ? (
+                        {
+                          loading ? <>loading.....</>  : comments.length > 0 ? (
                           <>
                             <ul className="space-y-4 p-4  rounded-lg shadow">
-                              {currentPostComments.map((comm) => (
+                              {comments.map((comm) => (
                                 <li key={comm._id}>
                                   <span className="inline-flex ">
                                     <Avatar
@@ -384,7 +385,8 @@ const UserLanding = () => {
                           <p className="bg-gray-700 rounded-xl text-center py-2 mt-4 mb-3">
                             Empty Comment Section
                           </p>
-                        )}
+                        )              
+                        }                        
                       </div>
                     </div>
                     <hr className="mt-2" />
