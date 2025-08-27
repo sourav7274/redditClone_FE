@@ -4,22 +4,21 @@ import { useDispatch, useSelector } from "react-redux";
 import { Avatar, IconButton } from "@material-tailwind/react";
 import { Link } from "react-router-dom";
 import { setPostDetails } from "../features/postSlice";
-import Slider from "@material-tailwind/react";
 import Sidebar from "../components/SideBar";
+import { motion } from "framer-motion"; // Added for subtle animations
 
 const PostDetails = () => {
   const [currentPostComments, setCurrentPostComments] = useState([]);
   const { currentUser } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   let post = useSelector((state) => state.post.PostDetails);
+
   useEffect(() => {
     if (post && post.comments) {
       setCurrentPostComments(post.comments);
     }
   }, [post]);
-  console.log(post?.title)
-  // const postDetails = sessionStorage.getItem("post");
-  // console.log(postDetails);
+
   useEffect(() => {
     if (post == null) {
       const postDetails = sessionStorage.getItem("post");
@@ -29,75 +28,130 @@ const PostDetails = () => {
     }
   }, [post, dispatch]);
 
-  console.log("another test",currentPostComments)
-  // console.log(post.comments[0].userId.usrImgUrl);
-  return (
-    <div className="min-h-screen flex flex-col">
-      <main className="flex-grow text-white bg-redditBlack">
-        <div className="grid grid-cols-4 gap-4">
-          {/* Left Sidebar */}
-        <Sidebar user={currentUser} />
+  // Animation variants for post card and comments
+  const cardVariants = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  };
 
-          {/* Main Content - Takes Remaining Space */}
-          <div className="pt-4 col-span-2">
+  const commentVariants = {
+    initial: { opacity: 0, x: -20 },
+    animate: { opacity: 1, x: 0, transition: { duration: 0.3 } },
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col bg-redditBlack text-white">
+      <main className="flex-grow">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-7xl mx-auto px-4">
+          {/* Left Sidebar */}
+          <div className="hidden md:block">
+            <Sidebar user={currentUser} />
+          </div>
+
+          {/* Main Content */}
+          <div className="col-span-1 md:col-span-3 pt-6">
             {post ? (
-              <div className="w-full max-w-4xl">
-                {" "}
-                {/* Centers and limits max width */}
-                <div className="mt-2 p-4 bg-gray-900 rounded-lg">
-                  <div className="flex ">
+              <motion.div
+                className="w-full max-w-4xl mx-auto"
+                variants={cardVariants}
+                initial="initial"
+                animate="animate"
+              >
+                <div className="p-6 bg-redditDarkGray rounded-xl shadow-lg ">
+                  {/* Post Header */}
+                  <div className="flex items-center mb-4">
                     <Avatar
-                      className="mr-3"
-                      size="xs"
-                      src="https://placehold.co/600x400"
+                      className="mr-3 border-2 border-redditOrange/50"
+                      size="sm"
+                      src={post.author?.usrImgUrl || "https://placehold.co/600x400"}
+                      alt={post.author?.name || "User"}
                     />
-                    <p className="mr-4">
-                      {post.author ? post.author.name : "Unknown"}
-                    </p>
-                    <p className="text-sm text-gray-400">• Time</p>
+                    <div>
+                      <p className="font-semibold text-lg">
+                        {post.author ? post.author.name : "Unknown"}
+                      </p>
+                      <p className="text-sm text-redditLightGray">
+                        {post.createdAt
+                          ? new Date(post.createdAt).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })
+                          : "Unknown date"}
+                      </p>
+                    </div>
                   </div>
 
-                  <p className="mt-3 text-lg">{post.description}</p>
+                  {/* Post Content */}
+                  <h1 className="mt-2 text-3xl font-bold text-white leading-tight">
+                    {post.title}
+                  </h1>
+                  <p className="mt-3 text-lg text-gray-200 leading-relaxed">
+                    {post.description}
+                  </p>
                   {post.imgUrl && (
                     <img
-                      className="h-98 w-full rounded-lg object-cover mt-4"
+                      className="mt-4 w-full rounded-lg object-cover max-h-[500px] shadow-md"
                       src={post.imgUrl}
-                      alt="Post"
+                      alt={post.title}
                     />
                   )}
 
-                  <div className="flex items-center mt-3 mb-5">
+                  {/* Interaction Buttons */}
+                  <div className="flex items-center mt-4 mb-6">
                     <IconButton
                       color="blue"
                       size="sm"
                       onClick={() => console.log("Like Clicked")}
-                      className="rounded-full mr-5"
+                      className="rounded-full mr-4 bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
                     >
-                      <i className="fas fa-heart" />
+                      <i className="fas fa-heart text-white" />
                     </IconButton>
+                    <span className="text-sm text-redditLightGray">
+                      {post.likes?.length || 0} Likes
+                    </span>
                   </div>
 
-                  {currentPostComments?.length > 0 ? (
-                    <ul className="mt-3">
-                      {currentPostComments.map((comm) => (
-                        <li
-                          key={comm._id}
-                          className="bg-gray-800 py-2 px-4 rounded my-1"
-                        >
-                          <div className="flex gap-4">
-                            <Avatar src={comm.userId.usrImgUrl} size="xs" />
-                            <p>{comm.content}</p>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="mt-3 text-gray-400">No comments yet.</p>
-                  )}
+                  {/* Comments Section */}
+                  <div className="mt-6">
+                    <h2 className="text-xl font-semibold text-redditOrange mb-4">
+                      Comments
+                    </h2>
+                    {currentPostComments?.length > 0 ? (
+                      <ul className="space-y-3">
+                        {currentPostComments.map((comm) => (
+                          <motion.li
+                            key={comm._id}
+                            className="bg-gray-800/50 p-4 rounded-lg border border-redditLightGray/20 hover:bg-gray-800/70 transition-colors duration-200"
+                            variants={commentVariants}
+                            initial="initial"
+                            animate="animate"
+                          >
+                            <div className="flex items-start gap-3">
+                              <Avatar
+                                src={comm.userId?.usrImgUrl || "https://placehold.co/600x400"}
+                                size="xs"
+                                className="border border-redditLightGray/50"
+                                alt={comm.userId?.name || "Commenter"}
+                              />
+                              <div>
+                                <p className="text-sm font-medium text-redditLightGray">
+                                  {comm.userId?.name || "Anonymous"}
+                                </p>
+                                <p className="text-gray-200">{comm.content}</p>
+                              </div>
+                            </div>
+                          </motion.li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-gray-400">No comments yet.</p>
+                    )}
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             ) : (
-              <p className="text-center text-gray-400">Loading post...</p>
+              <p className="text-center text-gray-400 py-10">Loading post...</p>
             )}
           </div>
         </div>

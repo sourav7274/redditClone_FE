@@ -5,7 +5,9 @@ import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { getCurrentUser, updateUser } from "../features/userSlice";
 import { useState } from "react";
+import { motion } from "motion/react";
 import Sidebar from "../components/SideBar";
+import { animate } from "motion";
 
 const UserPage = () => {
   const dispatch = useDispatch();
@@ -57,6 +59,16 @@ const UserPage = () => {
       }
     );
   };
+
+  let diVrainats = {
+    initial : {
+      scale :1 
+    },
+    whileHover:{
+      scale:1.1
+    }
+  }
+
 
   useEffect(() => {
     const user = localStorage.getItem("user");
@@ -365,11 +377,11 @@ const UserPage = () => {
 
                   </div>
 
-                  <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-redditLightGray/20">
+                  <div className="flex justify-end space-x-4 mt-8 pt-6">
                     <button
                       type="button"
                       onClick={() => setIsEditMode(false)}
-                      className="px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-500 hover:to-gray-600 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                      className="px-6 py-3 bg-gradient-to-r cursor-pointer from-gray-600 to-gray-700 hover:from-gray-500 hover:to-gray-600 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
                     >
                       Cancel
                     </button>
@@ -397,13 +409,16 @@ const UserPage = () => {
                 </h3>
                 <div className="grid grid-cols-1 gap-3">
                   {currentUser.posts.map((post) => (
-                    <div
+                    <motion.div
+                      variants={diVrainats}
+                      initial="initial"
+                      whileHover="whileHover"
                       onClick={() => handleNavigate(post._id)}
                       key={post._id}
-                      className="bg-red-500 text-white p-3 rounded-md shadow-md"
+                      className="bg-red-500 cursor-pointer text-white p-3 rounded-md shadow-md"
                     >
                       <p className="font-semibold">{post.title}</p>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </div>
@@ -417,10 +432,13 @@ const UserPage = () => {
                 </h3>
                 <div className="grid grid-cols-1 gap-3">
                   {currentUser.comments.map((comment) => (
-                    <div
+                    <motion.div
+                     variants={diVrainats}
+                      initial="initial"
+                      whileHover="whileHover"
                       onClick={() => handleNavigate(comment.postId._id)}
                       key={comment._id}
-                      className="bg-green-500 text-white p-3 rounded-md shadow-md"
+                      className="bg-green-500 cursor-pointer text-white p-3 rounded-md shadow-md"
                     >
                       <p>
                         {comment.content} on{" "}
@@ -428,7 +446,7 @@ const UserPage = () => {
                           {comment.postId.title}
                         </span>
                       </p>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </div>
@@ -442,10 +460,13 @@ const UserPage = () => {
                 </h3>
                 <div className="grid grid-cols-1 gap-3">
                   {currentUser.likedPosts.map((like) => (
-                    <div
+                    <motion.div
+                     variants={diVrainats}
+                      initial="initial"
+                      whileHover="whileHover"
                       onClick={() => handleNavigate(like?._id)}
                       key={like._id}
-                      className="bg-blue-500 text-white p-3 rounded-md shadow-md"
+                      className="bg-blue-500 cursor-pointer text-white p-3 rounded-md shadow-md"
                     >
                       <p>
                         <span className="font-semibold">
@@ -454,7 +475,7 @@ const UserPage = () => {
                         's post{" "}
                         <span className="font-semibold">{like?.title}</span>
                       </p>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </div>
