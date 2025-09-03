@@ -11,7 +11,13 @@ import { postComment } from "../features/commentSlice";
 import { getCommentsByPost } from "../features/commentSlice";
 import { clearComments } from "../features/commentSlice";
 import { likePost } from "../features/likeSlice";
-import { updateUserActivities, getLikedPosts } from "../features/userSlice"; // Import action to update user activities
+import {
+  updateUserActivities,
+  getLikedPosts,
+  getOtherUSers,
+  addFriend,
+  fetchSentRequests,
+} from "../features/userSlice"; // Import action to update user activities
 import { motion } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -26,7 +32,9 @@ const UserLanding = () => {
   const { likedPosts } = useSelector((state) => state.user);
   const { posts } = useSelector((state) => state.post);
   const { currentUser } = useSelector((state) => state.user);
-  const {comments,loading} = useSelector((state) => state.comments);
+  const { comments, loading } = useSelector((state) => state.comments);
+  const { otherUser } = useSelector((state) => state.user);
+  const { sentRequest } = useSelector((state) => state.user);
   const [file, setFile] = useState(null);
   const [newPost, setPost] = useState({
     title: "",
@@ -34,6 +42,7 @@ const UserLanding = () => {
     imgUrl: null,
     description: "",
   });
+
   const handlePostCreator = (e) => {
     const { name, value } = e.target;
     // console.log(name,value)
@@ -45,6 +54,12 @@ const UserLanding = () => {
 
     // console.log(newPost)
   };
+
+  console.log(sentRequest.includes(otherUser[0]?._id));
+
+  sentRequest.map((req) => {
+    console.log(req, otherUser);
+  });
 
   // console.log(currentUser)
   // console.log(comments)
@@ -64,12 +79,20 @@ const UserLanding = () => {
   };
 
   useEffect(() => {
+    dispatch(getOtherUSers(currentUser?._id));
+  }, []);
+
+  useEffect(() => {
     dispatch(getLikedPosts(currentUser?._id));
   }, [currentUser]);
 
   useEffect(() => {
     dispatch(getPosts(currentUser?._id));
-    console.log(currentUser);
+    // console.log(currentUser);
+  }, [currentUser]);
+
+  useEffect(() => {
+    dispatch(fetchSentRequests(currentUser?._id));
   }, [currentUser]);
 
   // console.log(posts[0])
@@ -186,9 +209,19 @@ const UserLanding = () => {
 
   const handlePostDetails = (id) => {
     dispatch(getPostByID(id));
-    console.log("testing here",id)
     navigate(`/post/${id}`);
   };
+
+  const handleRequest = async (id) => {
+    await dispatch(
+      addFriend({ sendingUserId: currentUser._id, recievingUserId: id })
+    );
+    dispatch(fetchSentRequests(currentUser._id)); // Refresh sent requests
+    // dispatch(getOtherUSers(currentUser._id)); // Refresh other users
+    // dispatch(getLikedPosts(currentUser._id)); // Refresh liked posts if needed
+    // dispatch(getCurrentUser(currentUser._id)); // If you want to refresh the whole user object
+  };
+
   const listVariants = {
     initial: {
       scale: 1,
@@ -201,6 +234,15 @@ const UserLanding = () => {
     whileHover: {
       scale: 1.3,
       color: "red",
+      originX: 0,
+    },
+  };
+  const adduserVarinats = {
+    initial: {
+      scale: 1,
+    },
+    whileHover: {
+      scale: 1.1,
       originX: 0,
     },
   };
@@ -358,8 +400,9 @@ const UserLanding = () => {
                             Post
                           </button>
                         </span>
-                        {
-                          loading ? <>loading.....</>  : comments.length > 0 ? (
+                        {loading ? (
+                          <>loading.....</>
+                        ) : comments.length > 0 ? (
                           <>
                             <ul className="space-y-4 p-4  rounded-lg shadow">
                               {comments.map((comm) => (
@@ -385,8 +428,7 @@ const UserLanding = () => {
                           <p className="bg-gray-700 rounded-xl text-center py-2 mt-4 mb-3">
                             Empty Comment Section
                           </p>
-                        )              
-                        }                        
+                        )}
                       </div>
                     </div>
                     <hr className="mt-2" />
@@ -501,9 +543,16 @@ const UserLanding = () => {
                               key={comment._id}
                               className="my-2 bg-gray-800 ps-4 py-2 rounded-lg"
                             >
-                              <Link onClick={() => handlePostDetails(comment?.postId?._id)}>
-                                 <li>{comment.content} on {comment?.postId?.author?.name}'s post {comment?.postId?.title} </li>
-                           
+                              <Link
+                                onClick={() =>
+                                  handlePostDetails(comment?.postId?._id)
+                                }
+                              >
+                                <li>
+                                  {comment.content} on{" "}
+                                  {comment?.postId?.author?.name}'s post{" "}
+                                  {comment?.postId?.title}{" "}
+                                </li>
                               </Link>
                             </motion.div>
                           ))}
@@ -629,8 +678,12 @@ const UserLanding = () => {
                               key={post._id}
                               className="my-2 bg-gray-800 ps-4 py-2 rounded-lg"
                             >
-                              <Link onClick={() => handlePostDetails(post?._id)}>
-                                <li>{post?.author?.name}'s post - {post?.title}</li>
+                              <Link
+                                onClick={() => handlePostDetails(post?._id)}
+                              >
+                                <li>
+                                  {post?.author?.name}'s post - {post?.title}
+                                </li>
                               </Link>
                             </motion.div>
                           ))}
@@ -638,6 +691,62 @@ const UserLanding = () => {
                     </section>
                   </div>
                 )}
+              </div>
+              <div className="text-light-green-50">
+                <p className="mr-auto">Friend Suggestions</p>
+                <div>
+                  {otherUser.map((user) => (
+                    <div
+                      key={user._id}
+                      className="inline-flex items-center gap-2 p-2 bg-gray-900 rounded-lg mr-3"
+                    >
+                      <Avatar
+                        size="sm"
+                        src={user.usrImgUrl || "https://placehold.co/100"}
+                      />
+                      <p className="text-white">{user.name}</p>
+                      <motion.div
+                        onClick={() => handleRequest(user._id)}
+                        variants={adduserVarinats}
+                        initial="initial"
+                        whileHover="whileHover"
+                        className="hover:cursor-pointer"
+                      >
+                        {!sentRequest.includes(user._id) ? (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="size-6"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z"
+                            />
+                          </svg>
+                        ) : (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="size-6"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
+                            />
+                          </svg>
+                        )}
+                      </motion.div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

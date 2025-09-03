@@ -51,7 +51,6 @@ export const getUser = createAsyncThunk("get/User", async () => {
 export const getCurrentUser = createAsyncThunk(
   "get/currentUSer",
   async (id) => {
-    console.log("here")
     const response = await fetch(`http://localhost:3000/users/${id}`, {
       method: "GET",
       headers: {
@@ -85,6 +84,21 @@ export const updateUser  = createAsyncThunk("update/user",async ({data,id}) =>{
   return response.status
 })
 
+export const addFriend = createAsyncThunk("add/friend",async ({sendingUserId,recievingUserId,note=""}) => {
+  const response = await axios.post(`http://localhost:3000/friend-request`,{sendingUserId,recievingUserId,note})
+  // console.log(response.data)
+})
+
+export const fetchSentRequests = createAsyncThunk("get/sent-requests",async (id) => {
+  const response = await axios.get(`http://localhost:3000/sent-friend-requests/${id}`)
+  console.log(response.data.requests)
+  let requestArray = response.data.requests.reduce((acc,curr) => {
+    acc.push(curr.recievingUserId)
+    return acc
+  } , [])
+  return requestArray
+})
+
 export const userSlice = createSlice({
   name: "user",
   initialState: {
@@ -92,6 +106,7 @@ export const userSlice = createSlice({
     currentUser: storedUser ? JSON.parse(storedUser) : null,
     likedPosts:[],
     otherUser: [],
+    sentRequest: [],
     status: "idle",
     error: null,
   },
@@ -134,6 +149,9 @@ export const userSlice = createSlice({
     });
     builder.addCase(getLikedPosts.fulfilled,(state,action) =>{
       state.likedPosts = action.payload
+    })
+    builder.addCase(fetchSentRequests.fulfilled,(state,action) =>{
+      state.sentRequest = action.payload
     })
   },
 });
