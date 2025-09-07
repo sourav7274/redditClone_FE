@@ -17,11 +17,13 @@ import {
   getOtherUSers,
   addFriend,
   fetchSentRequests,
-} from "../features/userSlice"; // Import action to update user activities
-import { motion } from "motion/react";
+  unsendFriendRequest,
+} from "../features/userSlice";
+import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Sidebar from "../components/SideBar";
+import ThemeToggle from "../components/ThemeToggle";
 
 const UserLanding = () => {
   const dispatch = useDispatch();
@@ -222,6 +224,13 @@ const UserLanding = () => {
     // dispatch(getCurrentUser(currentUser._id)); // If you want to refresh the whole user object
   };
 
+  const handleUnsend = async (requestId) => {
+    await dispatch(
+      unsendFriendRequest({ requestId, senderId: currentUser._id })
+    );
+    dispatch(fetchSentRequests(currentUser._id));
+  };
+
   const listVariants = {
     initial: {
       scale: 1,
@@ -248,28 +257,41 @@ const UserLanding = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* <Header /> */}
-      <main className="flex-grow  text-white bg-redditBlack">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8 }}
+      className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all duration-1000"
+    >
+      <main className="flex-grow text-white">
         <div className="grid grid-cols-4">
-          <div className=" p-4">
-            <h3>
-              {currentUser && currentUser.name ? (
-                <>
-                  <p>Welcome {currentUser.name}</p>
-                </>
-              ) : (
-                <>
-                  <p>Please Sign In</p>
-                </>
-              )}{" "}
-            </h3>
+          <div className="p-4">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="flex items-center justify-between mb-4"
+            >
+              <h3 className="text-white dark:text-gray-100 transition-colors duration-1000">
+                {currentUser && currentUser.name ? (
+                  <>Welcome {currentUser.name}</>
+                ) : (
+                  <>Please Sign In</>
+                )}
+              </h3>
+              <ThemeToggle />
+            </motion.div>
             <Sidebar user={currentUser} />
           </div>
           {/* Add a Post Section */}
           <div className="col-span-2 px-3">
             <div className="my-3">
-              <div className="max-w-3xl  bg-redditBlack p-6 rounded-2xl shadow-md">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="max-w-3xl bg-white/10 dark:bg-gray-800/20 backdrop-blur-lg p-6 rounded-2xl shadow-md border border-white/20 dark:border-gray-700/30 transition-all duration-1000"
+              >
                 <h2 className="text-xl font-semibold text-white mb-4">
                   Create a Post
                 </h2>
@@ -319,7 +341,7 @@ const UserLanding = () => {
                     Post
                   </button>
                 </div>
-              </div>
+              </motion.div>
             </div>
             <hr className="mx-2" />
             <div>
@@ -706,13 +728,25 @@ const UserLanding = () => {
                       />
                       <p className="text-white">{user.name}</p>
                       <motion.div
-                        onClick={() => handleRequest(user._id)}
+                        onClick={() => {
+                          const isPending = sentRequest.some(
+                            (r) => r.receiverId === user._id
+                          );
+                          if (!isPending) {
+                            handleRequest(user._id);
+                          } else {
+                            const req = sentRequest.find(
+                              (r) => r.receiverId === user._id
+                            );
+                            if (req) handleUnsend(req.requestId);
+                          }
+                        }}
                         variants={adduserVarinats}
                         initial="initial"
                         whileHover="whileHover"
                         className="hover:cursor-pointer"
                       >
-                        {!sentRequest.includes(user._id) ? (
+                        {!sentRequest.some((r) => r.receiverId === user._id) ? (
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
@@ -728,20 +762,27 @@ const UserLanding = () => {
                             />
                           </svg>
                         ) : (
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            stroke="currentColor"
-                            class="size-6"
+                          <motion.div
+                            initial={{ scale: 1 }}
+                            animate={{ scale: [1, 1.15, 1] }}
+                            transition={{ duration: 0.6 }}
+                            title="Unsend request"
                           >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
-                            />
-                          </svg>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke-width="1.5"
+                              stroke="currentColor"
+                              class="size-6 text-red-400"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
+                              />
+                            </svg>
+                          </motion.div>
                         )}
                       </motion.div>
                     </div>
@@ -753,7 +794,7 @@ const UserLanding = () => {
         </div>
       </main>
       <Footer />
-    </div>
+    </motion.div>
   );
 };
 

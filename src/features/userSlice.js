@@ -74,39 +74,80 @@ export const getOtherUSers = createAsyncThunk("get/otherUsers", async (id) => {
   return data;
 });
 
-export const getLikedPosts = createAsyncThunk("get/likedPosts",async (id ) =>{
-  const response = await axios.get(`http://localhost:3000/user/${id}/like-posts`)
-  return response?.data?.likedPostIds
-}) 
+export const getLikedPosts = createAsyncThunk("get/likedPosts", async (id) => {
+  const response = await axios.get(
+    `http://localhost:3000/user/${id}/like-posts`
+  );
+  return response?.data?.likedPostIds;
+});
 
-export const updateUser  = createAsyncThunk("update/user",async ({data,id}) =>{
-  const response = await axios.put(`http://localhost:3000/user/${id}/updateDetails`,data)
-  return response.status
-})
+export const updateUser = createAsyncThunk(
+  "update/user",
+  async ({ data, id }) => {
+    const response = await axios.put(
+      `http://localhost:3000/user/${id}/updateDetails`,
+      data
+    );
+    return response.status;
+  }
+);
 
-export const addFriend = createAsyncThunk("add/friend",async ({sendingUserId,recievingUserId,note=""}) => {
-  const response = await axios.post(`http://localhost:3000/friend-request`,{sendingUserId,recievingUserId,note})
-  // console.log(response.data)
-})
+export const addFriend = createAsyncThunk(
+  "add/friend",
+  async ({ sendingUserId, recievingUserId, note = "" }) => {
+    await axios.post(`http://localhost:3000/friend-request`, {
+      sendingUserId,
+      recievingUserId,
+      note,
+    });
+    // console.log(response.data)
+  }
+);
 
-export const fetchSentRequests = createAsyncThunk("get/sent-requests",async (id) => {
-  const response = await axios.get(`http://localhost:3000/sent-friend-requests/${id}`)
-  console.log(response.data.requests)
-  let requestArray = response.data.requests.reduce((acc,curr) => {
-    acc.push(curr.recievingUserId)
-    return acc
-  } , [])
-  return requestArray
-})
+export const fetchSentRequests = createAsyncThunk(
+  "get/sent-requests",
+  async (id) => {
+    const response = await axios.get(
+      `http://localhost:3000/sent-friend-requests/${id}`
+    );
+    // Return an array of { requestId, receiverId }
+    const mapped = response.data.requests.map((req) => ({
+      requestId: req._id,
+      receiverId: req.recievingUserId._id || req.recievingUserId,
+    }));
+    return mapped;
+  }
+);
+
+export const unsendFriendRequest = createAsyncThunk(
+  "delete/friend-request",
+  async ({ requestId, senderId }) => {
+    await axios.delete(`http://localhost:3000/friend-request/${requestId}`, {
+      params: { sender: senderId },
+    });
+    return requestId;
+  }
+);
+
+export const fetchRecievingRequests = createAsyncThunk(
+  "get/sent-requests",
+  async (id) => {
+    const response = await axios.get(
+      `http://localhost:3000/friend-requests/${id}`
+    );
+    console.log(response.data.requests);
+    return response.data.requests;
+  }
+);
 
 export const userSlice = createSlice({
   name: "user",
   initialState: {
     users: [],
     currentUser: storedUser ? JSON.parse(storedUser) : null,
-    likedPosts:[],
+    likedPosts: [],
     otherUser: [],
-    sentRequest: [],
+    sentRequest: [], // [{requestId, receiverId}]
     status: "idle",
     error: null,
   },
@@ -147,12 +188,18 @@ export const userSlice = createSlice({
     builder.addCase(getOtherUSers.fulfilled, (state, action) => {
       state.otherUser = action.payload;
     });
-    builder.addCase(getLikedPosts.fulfilled,(state,action) =>{
-      state.likedPosts = action.payload
-    })
-    builder.addCase(fetchSentRequests.fulfilled,(state,action) =>{
-      state.sentRequest = action.payload
-    })
+    builder.addCase(getLikedPosts.fulfilled, (state, action) => {
+      state.likedPosts = action.payload;
+    });
+    builder.addCase(fetchSentRequests.fulfilled, (state, action) => {
+      state.sentRequest = action.payload;
+    });
+    builder.addCase(unsendFriendRequest.fulfilled, (state, action) => {
+      const removedId = action.payload;
+      state.sentRequest = state.sentRequest.filter(
+        (r) => r.requestId !== removedId
+      );
+    });
   },
 });
 
