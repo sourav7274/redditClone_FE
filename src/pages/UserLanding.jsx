@@ -1,11 +1,10 @@
 import Footer from "../components/Footer";
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useState } from "react";
-import { addPost, getPosts, getPostByID } from "../features/postSlice";
+import { addPost, getPosts } from "../features/postSlice";
 import { Avatar } from "@material-tailwind/react";
 import comment from "../images/comment.png";
 import { Link } from "react-router-dom";
-import { IconButton } from "@material-tailwind/react";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { postComment } from "../features/commentSlice";
 import { getCommentsByPost } from "../features/commentSlice";
@@ -18,8 +17,11 @@ import {
   addFriend,
   fetchSentRequests,
   unsendFriendRequest,
+  fetchRecievingRequests,
+  chnageRequestStatus,
+  fetchFriends,
 } from "../features/userSlice";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Sidebar from "../components/SideBar";
@@ -36,7 +38,9 @@ const UserLanding = () => {
   const { currentUser } = useSelector((state) => state.user);
   const { comments, loading } = useSelector((state) => state.comments);
   const { otherUser } = useSelector((state) => state.user);
-  const { sentRequest } = useSelector((state) => state.user);
+  const { sentRequest, receivingRequests, friends } = useSelector(
+    (state) => state.user
+  );
   const [file, setFile] = useState(null);
   const [newPost, setPost] = useState({
     title: "",
@@ -47,30 +51,26 @@ const UserLanding = () => {
 
   const handlePostCreator = (e) => {
     const { name, value } = e.target;
-    // console.log(name,value)
-    // console.log(e.target.name,e.target.value)
     setPost((pval) => ({
       ...pval,
       [name]: value,
     }));
-
-    // console.log(newPost)
   };
 
-  console.log(sentRequest.includes(otherUser[0]?._id));
-
-  sentRequest.map((req) => {
-    console.log(req, otherUser);
-  });
-
-  // console.log(currentUser)
-  // console.log(comments)
+  // Debug logging moved to useEffect
+  useEffect(() => {
+    sentRequest.forEach((req) => {
+      console.log(req, otherUser);
+    });
+  }, [sentRequest, otherUser]);
 
   const [openDropdown, setOpenDropdown] = useState({
     activity: false,
     comments: false,
     posts: false,
     likes: false,
+    requests: false,
+    incomingRequests: false,
   });
 
   const toggleDropdown = (menu) => {
@@ -82,31 +82,40 @@ const UserLanding = () => {
 
   useEffect(() => {
     dispatch(getOtherUSers(currentUser?._id));
-  }, []);
+  }, [dispatch, currentUser]);
 
   useEffect(() => {
     dispatch(getLikedPosts(currentUser?._id));
-  }, [currentUser]);
+  }, [dispatch, currentUser]);
 
   useEffect(() => {
     dispatch(getPosts(currentUser?._id));
     // console.log(currentUser);
-  }, [currentUser]);
+  }, [dispatch, currentUser]);
 
   useEffect(() => {
     dispatch(fetchSentRequests(currentUser?._id));
-  }, [currentUser]);
+  }, [dispatch, currentUser]);
 
-  // console.log(posts[0])
-  // console.log(currentUser)
+  useEffect(() => {
+    if (currentUser?._id) {
+      dispatch(fetchRecievingRequests(currentUser?._id));
+    }
+  }, [dispatch, currentUser]);
+
+  useEffect(() => {
+    if (currentUser?._id) {
+      dispatch(fetchFriends(currentUser?._id));
+    }
+  }, [dispatch, currentUser]);
+
   const handleCommentSubmit = (id) => {
-    // console.log(commentDetails,id,currentUser._id)
     const newComment = {
       postId: id,
       userId: currentUser ? currentUser._id : "",
       content: commentDetails,
     };
-    if (newComment.content != "" && newComment.userId != "") {
+    if (newComment.content !== "" && newComment.userId !== "") {
       dispatch(postComment(newComment));
       dispatch(updateUserActivities({ type: "comment", data: newComment })); // Update user activities
     } else {
@@ -164,7 +173,7 @@ const UserLanding = () => {
             }
           );
 
-          if (fileResponse.status != 200) {
+          if (fileResponse.status !== 200) {
             console.log("Some Error Occured", file);
           }
           const fileUrl = await fileResponse.data.url;
@@ -210,8 +219,20 @@ const UserLanding = () => {
   };
 
   const handlePostDetails = (id) => {
-    dispatch(getPostByID(id));
     navigate(`/post/${id}`);
+  };
+
+  const updateRequestStatus = async (requestId, status) => {
+    try {
+      await dispatch(chnageRequestStatus({ id: requestId, status: status }));
+      // Refresh all relevant data after status change
+      dispatch(fetchRecievingRequests(currentUser?._id));
+      dispatch(fetchFriends(currentUser?._id));
+      dispatch(getOtherUSers(currentUser?._id));
+      dispatch(fetchSentRequests(currentUser?._id));
+    } catch (error) {
+      console.error("Error updating friend request:", error);
+    }
   };
 
   const handleRequest = async (id) => {
@@ -246,15 +267,6 @@ const UserLanding = () => {
       originX: 0,
     },
   };
-  const adduserVarinats = {
-    initial: {
-      scale: 1,
-    },
-    whileHover: {
-      scale: 1.1,
-      originX: 0,
-    },
-  };
 
   return (
     <motion.div
@@ -273,12 +285,12 @@ const UserLanding = () => {
               className="flex items-center justify-between mb-4"
             >
               <h3 className="text-white dark:text-gray-100 transition-colors duration-1000">
-              {currentUser && currentUser.name ? (
+                {currentUser && currentUser.name ? (
                   <>Welcome {currentUser.name}</>
                 ) : (
                   <>Please Sign In</>
                 )}
-            </h3>
+              </h3>
               <ThemeToggle />
             </motion.div>
             <Sidebar user={currentUser} />
@@ -363,8 +375,8 @@ const UserLanding = () => {
                       />
                       <div>
                         <p className="text-white dark:text-gray-100 font-semibold transition-colors duration-1000">
-                        {post.author ? post.author.name : "Dummy Name"}
-                      </p>
+                          {post.author ? post.author.name : "Dummy Name"}
+                        </p>
                         <p className="text-white/60 dark:text-gray-400 text-sm transition-colors duration-1000">
                           {new Date(post.createdAt).toLocaleDateString()}
                         </p>
@@ -387,26 +399,26 @@ const UserLanding = () => {
                         alt="Post Image"
                       />
                     )}
-                    
+
                     <div className="flex items-center gap-6">
                       <motion.button
-                          onClick={() => likeHandler(post._id)}
+                        onClick={() => likeHandler(post._id)}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         className={`flex items-center gap-2 p-2 rounded-lg transition-all duration-300 ${
-                            likedPosts.includes(post._id)
+                          likedPosts.includes(post._id)
                             ? "text-red-500 bg-red-500/20"
                             : "text-white/70 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/10"
                         }`}
-                        >
-                          <i className="fas fa-heart" />
+                      >
+                        <i className="fas fa-heart" />
                         <span className="font-medium">
                           {post.likes ? post.likes.length : 0}
                         </span>
                       </motion.button>
-                      
+
                       <motion.button
-                          onClick={() => togglePosts(post._id)}
+                        onClick={() => togglePosts(post._id)}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         className="flex items-center gap-2 p-2 rounded-lg text-white/70 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-blue-500/10 transition-all duration-300"
@@ -416,7 +428,7 @@ const UserLanding = () => {
                           {post.comments ? post.comments.length : 0}
                         </span>
                       </motion.button>
-                      </div>
+                    </div>
                     {commentId === post._id && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
@@ -430,15 +442,15 @@ const UserLanding = () => {
                             src="https://placehold.co/600x400"
                           />
                           <div className="flex-1">
-                          <textarea
-                            placeholder="Write a comment..."
-                            value={commentDetails}
-                            onChange={(e) => setDetails(e.target.value)}
+                            <textarea
+                              placeholder="Write a comment..."
+                              value={commentDetails}
+                              onChange={(e) => setDetails(e.target.value)}
                               className="w-full p-3 text-white dark:text-gray-100 bg-white/10 dark:bg-gray-600/30 border border-white/20 dark:border-gray-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-white/60 dark:placeholder-gray-400 transition-all duration-1000 resize-none"
                               rows="3"
-                          ></textarea>
+                            ></textarea>
                             <motion.button
-                            onClick={() => handleCommentSubmit(post._id)}
+                              onClick={() => handleCommentSubmit(post._id)}
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                               className="mt-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white px-4 py-2 rounded-lg transition-all duration-300"
@@ -450,34 +462,36 @@ const UserLanding = () => {
                         {loading ? (
                           <div className="flex items-center justify-center py-4">
                             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
-                            <span className="ml-2 text-white/70 dark:text-gray-300">Loading...</span>
+                            <span className="ml-2 text-white/70 dark:text-gray-300">
+                              Loading...
+                            </span>
                           </div>
                         ) : comments.length > 0 ? (
                           <div className="mt-4 space-y-3">
-                              {comments.map((comm) => (
+                            {comments.map((comm) => (
                               <motion.div
                                 key={comm._id}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 className="flex items-start space-x-3 p-3 bg-white/5 dark:bg-gray-600/20 rounded-lg"
                               >
-                                    <Avatar
+                                <Avatar
                                   className="w-8 h-8"
-                                      src={
-                                        comm.userId.usrImgUrl ||
-                                        "https://placehold.co/600x400"
-                                      }
+                                  src={
+                                    comm.userId.usrImgUrl ||
+                                    "https://placehold.co/600x400"
+                                  }
                                 />
                                 <div className="flex-1">
                                   <p className="text-white dark:text-gray-100 font-semibold text-sm transition-colors duration-1000">
                                     {comm.userId.name}
                                   </p>
                                   <p className="text-white/80 dark:text-gray-300 text-sm transition-colors duration-1000">
-                                      {comm.content}
-                                    </p>
+                                    {comm.content}
+                                  </p>
                                 </div>
                               </motion.div>
-                              ))}
+                            ))}
                           </div>
                         ) : (
                           <p className="bg-white/5 dark:bg-gray-700/20 rounded-xl text-center py-4 mt-4 text-white/60 dark:text-gray-400 transition-colors duration-1000">
@@ -496,9 +510,190 @@ const UserLanding = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.5 }}
             >
+              {/* Friends Section */}
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-white dark:text-gray-100 font-bold text-lg transition-colors duration-1000">
+                  Friends ({friends.length})
+                </h3>
+                <motion.button
+                  onClick={() => dispatch(fetchFriends(currentUser?._id))}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 transition-all duration-300"
+                  title="Refresh friends"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
+                    stroke="currentColor"
+                    className="w-4 h-4"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
+                    />
+                  </svg>
+                </motion.button>
+              </div>
+              {friends && friends.length > 0 ? (
+                <div className="space-y-3 mb-6">
+                  {friends.slice(0, 3).map((friend, index) => (
+                    <motion.div
+                      key={friend._id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                      className="flex items-center justify-between p-3 bg-white/5 dark:bg-gray-700/20 rounded-xl hover:bg-white/10 dark:hover:bg-gray-700/30 transition-all duration-300"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Avatar
+                          size="sm"
+                          src={friend.usrImgUrl || "https://placehold.co/100"}
+                        />
+                        <div>
+                          <p className="text-white dark:text-gray-100 font-medium transition-colors duration-1000">
+                            {friend.name}
+                          </p>
+                          <p className="text-white/60 dark:text-gray-400 text-xs transition-colors duration-1000">
+                            Friend
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="p-2 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-400 transition-all duration-300"
+                          title="Message friend"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth="1.5"
+                            stroke="currentColor"
+                            className="w-4 h-4"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z"
+                            />
+                          </svg>
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  ))}
+                  {friends.length > 3 && (
+                    <div className="text-center py-2 text-white/60 dark:text-gray-400 text-sm">
+                      +{friends.length - 3} more friends
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-4 mb-6 text-white/60 dark:text-gray-400 transition-colors duration-1000">
+                  No friends yet
+                </div>
+              )}
+
               <h3 className="text-white dark:text-gray-100 font-bold text-lg mb-6 transition-colors duration-1000">
                 People You May Know
               </h3>
+              <div className="space-y-3">
+                {otherUser.map((user, index) => (
+                  <motion.div
+                    key={user._id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                    className="flex items-center justify-between p-3 bg-white/5 dark:bg-gray-700/20 rounded-xl hover:bg-white/10 dark:hover:bg-gray-700/30 transition-all duration-300"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <Avatar
+                        size="sm"
+                        src={user.usrImgUrl || "https://placehold.co/100"}
+                      />
+                      <div>
+                        <p className="text-white dark:text-gray-100 font-medium transition-colors duration-1000">
+                          {user.name}
+                        </p>
+                        <p className="text-white/60 dark:text-gray-400 text-xs transition-colors duration-1000">
+                          Suggested for you
+                        </p>
+                      </div>
+                    </div>
+                    <motion.button
+                      onClick={() => {
+                        const isPending = sentRequest.some(
+                          (r) => r.receiverId === user._id
+                        );
+                        if (!isPending) {
+                          handleRequest(user._id);
+                        } else {
+                          const req = sentRequest.find(
+                            (r) => r.receiverId === user._id
+                          );
+                          if (req) handleUnsend(req.requestId);
+                        }
+                      }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`p-2 rounded-lg transition-all duration-300 ${
+                        !sentRequest.some((r) => r.receiverId === user._id)
+                          ? "bg-purple-500/20 hover:bg-purple-500/30 text-purple-400"
+                          : "bg-red-500/20 hover:bg-red-500/30 text-red-400"
+                      }`}
+                      title={
+                        !sentRequest.some((r) => r.receiverId === user._id)
+                          ? "Send friend request"
+                          : "Unsend request"
+                      }
+                    >
+                      {!sentRequest.some((r) => r.receiverId === user._id) ? (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth="1.5"
+                          stroke="currentColor"
+                          className="w-5 h-5"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z"
+                          />
+                        </svg>
+                      ) : (
+                        <motion.div
+                          initial={{ scale: 1 }}
+                          animate={{ scale: [1, 1.15, 1] }}
+                          transition={{ duration: 0.6 }}
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            strokeWidth="1.5"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
+                            />
+                          </svg>
+                        </motion.div>
+                      )}
+                    </motion.button>
+                  </motion.div>
+                ))}
+              </div>
+
               <div className="relative">
                 {/* Activity Button */}
                 <button
@@ -751,104 +946,128 @@ const UserLanding = () => {
                   </div>
                 )}
               </div>
-              <div className="mt-8">
-                <h4 className="text-white dark:text-gray-100 font-semibold mb-4 text-sm uppercase tracking-wider transition-colors duration-1000">
-                  Friend Suggestions
-                </h4>
-                <div className="space-y-3">
-                  {otherUser.map((user, index) => (
-                    <motion.div
-                      key={user._id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.1 }}
-                      className="flex items-center justify-between p-3 bg-white/5 dark:bg-gray-700/20 rounded-xl hover:bg-white/10 dark:hover:bg-gray-700/30 transition-all duration-300"
+
+              {/* Friend Requests Section - Same design as Recent Activities */}
+              <div className="relative">
+                {/* Friend Requests Button */}
+                <button
+                  onClick={() => {
+                    toggleDropdown("requests");
+                    if (!openDropdown.requests) {
+                      dispatch(fetchRecievingRequests(currentUser?._id));
+                    }
+                  }}
+                  className="flex items-center justify-between w-full p-3 text-xl font-semibold border-b-0 text-gray-300 hover:text-blue-gray-900"
+                >
+                  <div className="grid mr-4 place-items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      stroke="currentColor"
+                      className="size-6"
                     >
-                      <div className="flex items-center space-x-3">
-                      <Avatar
-                        size="sm"
-                        src={user.usrImgUrl || "https://placehold.co/100"}
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z"
                       />
-                        <div>
-                          <p className="text-white dark:text-gray-100 font-medium transition-colors duration-1000">
-                            {user.name}
-                          </p>
-                          <p className="text-white/60 dark:text-gray-400 text-xs transition-colors duration-1000">
-                            Suggested for you
+                    </svg>
+                  </div>
+                  <p className="mr-auto">
+                    Friend Requests ({receivingRequests.length})
+                  </p>
+                  <span
+                    className={`ml-4 transition-transform ${
+                      openDropdown.requests ? "rotate-180" : ""
+                    }`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth="2.5"
+                      stroke="currentColor"
+                      className="w-4 h-4 mx-auto"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M19.5 8.25l-7.5 7.5-7.5-7.5"
+                      />
+                    </svg>
+                  </span>
+                </button>
+
+                {/* Friend Requests Dropdown Content */}
+                {openDropdown.requests && (
+                  <div className="ml-6">
+                    <section id="friendRequestSection">
+                      {receivingRequests && receivingRequests.length > 0 ? (
+                        <ul className="space-y-2">
+                          {receivingRequests.map((request, index) => (
+                            <motion.div
+                              key={request._id}
+                              variants={listVariants}
+                              whileHover="whileHover"
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.3, delay: index * 0.1 }}
+                              className="my-2 bg-gray-800 ps-4 py-2 rounded-lg flex items-center justify-between"
+                            >
+                              <div className="flex items-center space-x-3">
+                                <Avatar
+                                  size="sm"
+                                  src={
+                                    request.sendingUserId?.usrImgUrl ||
+                                    "https://placehold.co/100"
+                                  }
+                                />
+                                <div>
+                                  <p className="text-white text-sm font-medium">
+                                    {request.sendingUserId?.name ||
+                                      "Unknown User"}
+                                  </p>
+                                  <p className="text-gray-400 text-xs">
+                                    Wants to be friends
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() =>
+                                    updateRequestStatus(request._id, "accepted")
+                                  }
+                                  className="text-green-400 hover:text-green-300 text-sm font-medium px-2 py-1 rounded bg-green-900/30 hover:bg-green-900/50"
+                                >
+                                  Accept
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    updateRequestStatus(request._id, "declined")
+                                  }
+                                  className="text-red-400 hover:text-red-300 text-sm font-medium px-2 py-1 rounded bg-red-900/30 hover:bg-red-900/50"
+                                >
+                                  Decline
+                                </button>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div className="my-2 bg-gray-800 ps-4 py-2 rounded-lg">
+                          <p className="text-gray-400 text-sm">
+                            No friend requests
                           </p>
                         </div>
-                      </div>
-                      <motion.button
-                        onClick={() => {
-                          const isPending = sentRequest.some(
-                            (r) => r.receiverId === user._id
-                          );
-                          if (!isPending) {
-                            handleRequest(user._id);
-                          } else {
-                            const req = sentRequest.find(
-                              (r) => r.receiverId === user._id
-                            );
-                            if (req) handleUnsend(req.requestId);
-                          }
-                        }}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className={`p-2 rounded-lg transition-all duration-300 ${
-                          !sentRequest.some((r) => r.receiverId === user._id)
-                            ? "bg-purple-500/20 hover:bg-purple-500/30 text-purple-400"
-                            : "bg-red-500/20 hover:bg-red-500/30 text-red-400"
-                        }`}
-                        title={
-                          !sentRequest.some((r) => r.receiverId === user._id)
-                            ? "Send friend request"
-                            : "Unsend request"
-                        }
-                      >
-                        {!sentRequest.some((r) => r.receiverId === user._id) ? (
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth="1.5"
-                            stroke="currentColor"
-                            className="w-5 h-5"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z"
-                            />
-                          </svg>
-                        ) : (
-                          <motion.div
-                            initial={{ scale: 1 }}
-                            animate={{ scale: [1, 1.15, 1] }}
-                            transition={{ duration: 0.6 }}
-                          >
-                            <svg
-                              className="w-5 h-5"
-                              fill="none"
-                              strokeWidth="1.5"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                              xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
-                            />
-                          </svg>
-                          </motion.div>
-                        )}
-                      </motion.button>
-                      </motion.div>
-                  ))}
-                </div>
+                      )}
+                    </section>
+                  </div>
+                )}
               </div>
-          </motion.div>
-        </div>
+            </motion.div>
+          </div>
         </div>
       </main>
       <Footer />

@@ -104,6 +104,7 @@ export const addFriend = createAsyncThunk(
   }
 );
 
+
 export const fetchSentRequests = createAsyncThunk(
   "get/sent-requests",
   async (id) => {
@@ -130,15 +131,30 @@ export const unsendFriendRequest = createAsyncThunk(
 );
 
 export const fetchRecievingRequests = createAsyncThunk(
-  "get/sent-requests",
+  "get/receiving-requests",
   async (id) => {
     const response = await axios.get(
       `http://localhost:3000/friend-requests/${id}`
     );
-    console.log(response.data.requests);
     return response.data.requests;
   }
 );
+
+export const fetchFriends = createAsyncThunk(
+  "get/friends",
+  async (id) => {
+    const response = await axios.get(
+      `http://localhost:3000/user/${id}/friends`
+    );
+    return response.data.friends;
+  }
+);
+
+export const chnageRequestStatus = createAsyncThunk("update/request", async ({ id, status }) => {
+  console.log(id, status, "yeeee")
+  const response = await axios.put(`http://localhost:3000/friend-request-status/${id}`, { status })
+  return response.data;
+})
 
 export const userSlice = createSlice({
   name: "user",
@@ -148,6 +164,8 @@ export const userSlice = createSlice({
     likedPosts: [],
     otherUser: [],
     sentRequest: [], // [{requestId, receiverId}]
+    receivingRequests: [], // Friend requests received by current user
+    friends: [], // Current user's friends
     status: "idle",
     error: null,
   },
@@ -199,6 +217,12 @@ export const userSlice = createSlice({
       state.sentRequest = state.sentRequest.filter(
         (r) => r.requestId !== removedId
       );
+    });
+    builder.addCase(fetchRecievingRequests.fulfilled, (state, action) => {
+      state.receivingRequests = action.payload;
+    });
+    builder.addCase(fetchFriends.fulfilled, (state, action) => {
+      state.friends = action.payload;
     });
   },
 });
