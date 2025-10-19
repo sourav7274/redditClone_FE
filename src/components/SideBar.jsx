@@ -23,30 +23,16 @@ const Sidebar = ({ user }) => {
       description: "Your dashboard",
     },
     {
-      name: "Inbox",
+      name: "Messages",
       href: "/inbox",
-      icon: InboxIcon,
-      description: "Messages & notifications",
+      icon: ChatBubbleLeftRightIcon,
+      description: "Chat with friends",
     },
     {
       name: "Profile",
       href: `/userDetails/${user?._id}`,
       icon: UserIcon,
       description: "View your profile",
-    },
-    {
-      name: "Analytics",
-      href: "#",
-      icon: ChartBarIcon,
-      description: "Your activity stats",
-      disabled: true,
-    },
-    {
-      name: "Settings",
-      href: "#",
-      icon: Cog6ToothIcon,
-      description: "Account preferences",
-      disabled: true,
     },
   ];
 

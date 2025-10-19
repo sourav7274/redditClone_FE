@@ -26,6 +26,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Sidebar from "../components/SideBar";
 import ThemeToggle from "../components/ThemeToggle";
+import { formatPostDate } from "../utils/dateUtils";
 
 const UserLanding = () => {
   const dispatch = useDispatch();
@@ -378,7 +379,7 @@ const UserLanding = () => {
                           {post.author ? post.author.name : "Dummy Name"}
                         </p>
                         <p className="text-white/60 dark:text-gray-400 text-sm transition-colors duration-1000">
-                          {new Date(post.createdAt).toLocaleDateString()}
+                          {formatPostDate(post.createdAt)}
                         </p>
                       </div>
                     </div>
@@ -599,11 +600,13 @@ const UserLanding = () => {
                 </div>
               )}
 
-              <h3 className="text-white dark:text-gray-100 font-bold text-lg mb-6 transition-colors duration-1000">
-                People You May Know
-              </h3>
-              <div className="space-y-3">
-                {otherUser.map((user, index) => (
+              {otherUser && otherUser.length > 0 && (
+                <>
+                  <h3 className="text-white dark:text-gray-100 font-bold text-lg mb-6 transition-colors duration-1000">
+                    People You May Know
+                  </h3>
+                  <div className="space-y-3">
+                    {otherUser.map((user, index) => (
                   <motion.div
                     key={user._id}
                     initial={{ opacity: 0, y: 10 }}
@@ -691,8 +694,10 @@ const UserLanding = () => {
                       )}
                     </motion.button>
                   </motion.div>
-                ))}
-              </div>
+                    ))}
+                  </div>
+                </>
+              )}
 
               <div className="relative">
                 {/* Activity Button */}

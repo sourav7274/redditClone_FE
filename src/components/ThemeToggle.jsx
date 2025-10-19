@@ -7,13 +7,13 @@ const ThemeToggle = () => {
   return (
     <motion.button
       onClick={toggleTheme}
-      className="relative w-12 h-6 bg-gray-300 dark:bg-gray-600 rounded-full p-1 transition-colors duration-300"
+      className="relative w-12 h-6 bg-lightBorder dark:bg-darkBorder rounded-full p-1 transition-colors duration-300"
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       aria-label="Toggle theme"
     >
       <motion.div
-        className="w-4 h-4 bg-white rounded-full shadow-md"
+        className="w-4 h-4 bg-lightCard dark:bg-darkCard rounded-full shadow-md"
         animate={{
           x: isDark ? 24 : 0,
         }}
@@ -34,7 +34,7 @@ const ThemeToggle = () => {
         >
           {isDark ? (
             <svg
-              className="w-3 h-3 text-yellow-500"
+              className="w-3 h-3 text-trailRed"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -46,7 +46,7 @@ const ThemeToggle = () => {
             </svg>
           ) : (
             <svg
-              className="w-3 h-3 text-gray-600"
+              className="w-3 h-3 text-lightSecondary"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -60,3 +60,5 @@ const ThemeToggle = () => {
 };
 
 export default ThemeToggle;
+
+

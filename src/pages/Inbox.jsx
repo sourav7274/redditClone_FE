@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useState } from "react";
-import { getOtherUSers } from "../features/userSlice";
+import { getOtherUSers, fetchFriends } from "../features/userSlice";
 import axios from "axios";
 import { io } from "socket.io-client";
 import { useRef } from "react";
@@ -16,14 +16,16 @@ const Inbox = () => {
   const [currentMessage, setCurMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const{ currentUser} = useSelector((state) => state.user);
-  const otherUsers = useSelector((state) => state.user.otherUser);
+  const friends = useSelector((state) => state.user.friends);
   const dispatch = useDispatch();
   const messageEndRef = useRef(null);
   const [connectDis, setConnectDIs] = useState(false);
 
   useEffect(() => {
-    dispatch(getOtherUSers(currentUser._id));
-  }, [dispatch, currentUser._id]);
+    if (currentUser?._id) {
+      dispatch(fetchFriends(currentUser._id));
+    }
+  }, [dispatch, currentUser]);
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -144,21 +146,45 @@ const Inbox = () => {
           </div>
         )}
 
-        {/* User List */}
+        {/* Friends List */}
         <div className="col-span-1 p-6 overflow-y-auto border-l border-gray-700">
-          <h3 className="text-xl font-semibold mb-4">Other Users</h3>
-          {otherUsers.length > 0 ? (
-            otherUsers.map((users) => (
+          <h3 className="text-xl font-semibold mb-4">Friends</h3>
+          {friends && friends.length > 0 ? (
+            friends.map((friend) => (
               <div
-                onClick={() => fetchMessages(users)}
-                className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-3 mb-3 rounded cursor-pointer transition"
-                key={users._id}
+                onClick={() => fetchMessages(friend)}
+                className={`px-4 py-3 mb-3 rounded cursor-pointer transition flex items-center space-x-3 ${
+                  currentChat && currentChat._id === friend._id
+                    ? "bg-blue-600 hover:bg-blue-700 text-white border-l-4 border-blue-400"
+                    : "bg-gray-800 hover:bg-gray-700 text-white"
+                }`}
+                key={friend._id}
               >
-                {users.name}
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  currentChat && currentChat._id === friend._id
+                    ? "bg-white text-blue-600"
+                    : "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+                }`}>
+                  <span className="font-bold text-sm">
+                    {friend.name?.charAt(0)?.toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex-1">
+                  <span className={`font-medium ${
+                    currentChat && currentChat._id === friend._id
+                      ? "text-white"
+                      : "text-gray-200"
+                  }`}>
+                    {friend.name}
+                  </span>
+                  {currentChat && currentChat._id === friend._id && (
+                    <div className="text-blue-200 text-xs">Active chat</div>
+                  )}
+                </div>
               </div>
             ))
           ) : (
-            <p className="text-gray-500">No Users Available</p>
+            <p className="text-gray-500">No Friends Available</p>
           )}
         </div>
       </div>

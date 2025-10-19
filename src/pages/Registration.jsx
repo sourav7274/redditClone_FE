@@ -324,7 +324,7 @@ export function Registration() {
                 <Button
                   variant="outlined"
                   size="lg"
-                  className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20 font-semibold py-3 rounded-xl backdrop-blur-sm transition-all duration-300"
+                  className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20 font-semibold py-3 rounded-xl backdrop-blur-sm transition-all duration-300 flex items-center justify-center"
                 >
                   <img
                     src="https://www.material-tailwind.com/logos/logo-google.png"
