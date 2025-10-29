@@ -20,6 +20,8 @@ const Inbox = () => {
   const dispatch = useDispatch();
   const messageEndRef = useRef(null);
   const [connectDis, setConnectDIs] = useState(false);
+  const [incomingCall, setIncomingCall] = useState(null);
+  const [isReceivingCall, setIsReceivingCall] = useState(false);
 
   useEffect(() => {
     if (currentUser?._id) {
@@ -44,6 +46,65 @@ const Inbox = () => {
     } catch (err) {
       console.log(err);
     }
+  };
+
+  const startCall = () =>{
+    console.log("yolo")
+    socket.emit("call_user",{
+      from:currentUser?._id,
+      to:currentChat?._id,
+      callerName: currentUser?.name
+    })
+    console.log("📞 Calling", currentChat.name);
+  }
+
+  useEffect(() => {
+  socket.on("call_accepted", ({ by }) => {
+    console.log("✅ Call accepted by", by);
+    setConnectDIs(true); // Now caller can open VideoCall
+  });
+
+  socket.on("call_rejected", ({ by }) => {
+    console.log("❌ Call rejected by", by);
+    alert("Call was rejected.");
+  });
+
+  socket.on("disconnect_call", () => {
+    console.log("📴 Call ended");
+    setConnectDIs(false);
+  });
+
+  return () => {
+    socket.off("call_accepted");
+    socket.off("call_rejected");
+    socket.off("disconnect_call");
+  };
+}, []);
+
+useEffect(() => {
+  if (!socket) return;
+
+  socket.on("incoming_call", ({ from, callerName }) => {
+    console.log("📞 Incoming call from", callerName);
+    setIncomingCall({ from, callerName });
+    setIsReceivingCall(true);
+  });
+
+  return () => {
+    socket.off("incoming_call");
+  };
+}, [socket]);
+
+  const acceptCall = () => {
+    socket.emit("accept_call", { from: incomingCall.from, to: currentUser._id });
+    setIsReceivingCall(false);
+    setConnectDIs(true); // open VideoCall UI
+  };
+
+  const rejectCall = () => {
+    console.log("call rejected")
+    socket.emit("reject_call", { from: incomingCall.from, to: currentUser._id });
+    setIsReceivingCall(false);
   };
 
   useEffect(() => {
@@ -73,6 +134,29 @@ const Inbox = () => {
 
   return (
     <div className="min-h-screen flex flex-col  bg-redditBlack text-white">
+      {isReceivingCall && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
+          <div className="bg-gray-800 p-6 rounded-lg shadow-xl text-center">
+            <p className="text-lg mb-4">
+              📞 {incomingCall.callerName} is calling you...
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={acceptCall}
+                className="bg-green-500 px-4 py-2 rounded hover:bg-green-600"
+              >
+                Accept
+              </button>
+              <button
+                onClick={rejectCall}
+                className="bg-red-500 px-4 py-2 rounded hover:bg-red-600"
+              >
+                Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className=" flex-grow grid grid-cols-4 h-full">
         {/* Sidebar */}
 
@@ -86,6 +170,7 @@ const Inbox = () => {
               onDisconnect={() => setConnectDIs(false)}
               receiverId={currentChat?._id}
               currentUserId={currentUser._id}
+              isCaller={true} // if you know current user started the call
             />
           </div>
         ) : (
@@ -98,7 +183,7 @@ const Inbox = () => {
                     <span className="text-green-400 ms-3">{user.name}</span>
                   </span>
                   <button
-                    onClick={() => setConnectDIs(!connectDis)}
+                    onClick={startCall}
                     className="text-green-400"
                   >
                     Connect
