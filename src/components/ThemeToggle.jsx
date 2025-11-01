@@ -15,7 +15,7 @@ const ThemeToggle = () => {
       <motion.div
         className="w-4 h-4 bg-lightCard dark:bg-darkCard rounded-full shadow-md"
         animate={{
-          x: isDark ? 24 : 0,
+          x: !isDark ? 24 : 0,
         }}
         transition={{
           type: "spring",
@@ -26,13 +26,13 @@ const ThemeToggle = () => {
         <motion.div
           className="w-full h-full flex items-center justify-center"
           animate={{
-            rotate: isDark ? 180 : 0,
+            rotate: !isDark ? 180 : 0,
           }}
           transition={{
             duration: 0.3,
           }}
         >
-          {isDark ? (
+          {!isDark ? (
             <svg
               className="w-3 h-3 text-trailRed"
               fill="currentColor"
@@ -46,7 +46,7 @@ const ThemeToggle = () => {
             </svg>
           ) : (
             <svg
-              className="w-3 h-3 text-lightSecondary"
+              className="w-3 h-3 text-lightSecondary brightness-150"
               fill="currentColor"
               viewBox="0 0 20 20"
             >

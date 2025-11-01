@@ -51,18 +51,18 @@ const Footer = () => {
             transition={{ duration: 0.4, delay: 0.1 }}
             className="flex items-center space-x-3"
           >
-            <motion.div
-              className="w-6 h-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center"
+            <motion.img
+              src="/images/logo.png"
+              alt="Bondly Logo"
+              className="w-8 h-8 rounded-lg object-contain"
               whileHover={{ rotate: 360 }}
               transition={{ duration: 0.6 }}
-            >
-              <span className="text-white font-bold text-xs">R</span>
-            </motion.div>
+            />
             <Typography
               variant="h6"
               className="bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent font-bold"
             >
-              Reddit Clone
+              Bondly
             </Typography>
           </motion.div>
 
@@ -98,7 +98,7 @@ const Footer = () => {
             className="flex items-center space-x-4"
           >
             <Typography className="text-white/60 text-sm">
-              &copy; {currentYear} Reddit Clone
+              &copy; {currentYear} Bondly
             </Typography>
             <div className="flex items-center space-x-3">
               <Link

@@ -6,9 +6,11 @@ import { Link } from "react-router-dom";
 import { setPostDetails } from "../features/postSlice";
 import Sidebar from "../components/SideBar";
 import { motion } from "framer-motion"; // Added for subtle animations
+import PostSkeleton from "../components/PostSkeleton";
 
 const PostDetails = () => {
   const [currentPostComments, setCurrentPostComments] = useState([]);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const { currentUser } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   let post = useSelector((state) => state.post.PostDetails);
@@ -27,6 +29,22 @@ const PostDetails = () => {
       }
     }
   }, [post, dispatch]);
+
+  // Handle initial loading state for post details
+  useEffect(() => {
+    if (post) {
+      setIsInitialLoad(false);
+    }
+  }, [post]);
+
+  // Fallback: turn off skeleton after 2 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInitialLoad(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Animation variants for post card and comments
   const cardVariants = {
@@ -50,7 +68,7 @@ const PostDetails = () => {
 
           {/* Main Content */}
           <div className="col-span-1 md:col-span-3 pt-6">
-            {post ? (
+            {(post && !isInitialLoad) ? (
               <motion.div
                 className="w-full max-w-4xl mx-auto"
                 variants={cardVariants}
@@ -151,7 +169,7 @@ const PostDetails = () => {
                 </div>
               </motion.div>
             ) : (
-              <p className="text-center text-gray-400 py-10">Loading post...</p>
+              <PostSkeleton count={1} />
             )}
           </div>
         </div>

@@ -69,7 +69,7 @@ const App = () => {
                   variant="h1"
                   className="mb-6 bg-gradient-to-r from-white via-purple-200 to-pink-200 dark:from-gray-100 dark:via-purple-300 dark:to-pink-300 bg-clip-text text-transparent font-bold text-6xl md:text-8xl transition-all duration-1000"
                 >
-                  Reddit Clone
+                  Bondly
                 </Typography>
 
                 <motion.div
@@ -91,10 +91,9 @@ const App = () => {
                   transition={{ duration: 0.8, delay: 0.4 }}
                 >
                   <Typography className="mb-12 text-white/70 dark:text-gray-300 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed transition-colors duration-1000">
-                    Join our vibrant community where ideas flourish,
-                    conversations spark, and connections are made. Share your
-                    thoughts, discover new perspectives, and be part of
-                    something amazing.
+                    Unlike social platforms chasing trends, Bondly focuses on authentic bonds over algorithms.
+                    It doesn’t push what’s viral — it promotes what’s valuable: your real friends, your real moments.
+                    It’s not just another social app — it’s your digital hangout built around trust, comfort, and connection.
                   </Typography>
                 </motion.div>
               </motion.div>
@@ -159,19 +158,19 @@ const App = () => {
               >
                 {[
                   {
-                    icon: "💬",
-                    title: "Engage",
-                    desc: "Join conversations and share your thoughts",
+                    icon: "❤️",
+                    title: "Real Connections",
+                    desc: "Bondly isn't about followers or numbers — it's about friends who matter. Every feature, from chats to video calls, is built to help people stay closer, not just connected.",
                   },
                   {
-                    icon: "🔗",
-                    title: "Connect",
-                    desc: "Build meaningful relationships with like-minded people",
+                    icon: "✨",
+                    title: "Simple, Seamless Socializing",
+                    desc: "No clutter, no noise — just clean, intuitive design. Users can post, like, comment, and message without endless menus or confusing options.",
                   },
                   {
-                    icon: "🚀",
-                    title: "Discover",
-                    desc: "Explore new ideas and trending topics",
+                    icon: "🎥",
+                    title: "More Than Text",
+                    desc: "Bondly goes beyond typing — it's about presence. Video calls, reactions, and visual posts make communication more real and expressive.",
                   },
                 ].map((feature, index) => (
                   <motion.div

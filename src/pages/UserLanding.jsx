@@ -27,6 +27,9 @@ import axios from "axios";
 import Sidebar from "../components/SideBar";
 import ThemeToggle from "../components/ThemeToggle";
 import { formatPostDate } from "../utils/dateUtils";
+import PostSkeleton from "../components/PostSkeleton";
+import CreatePostSkeleton from "../components/CreatePostSkeleton";
+import CommentSkeleton from "../components/CommentSkeleton";
 
 const UserLanding = () => {
   const dispatch = useDispatch();
@@ -34,8 +37,10 @@ const UserLanding = () => {
   const [commentId, setCommentId] = useState("");
   const [commentDetails, setDetails] = useState("");
   const [selectedFileName, setFileName] = useState("");
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
   const { likedPosts } = useSelector((state) => state.user);
-  const { posts } = useSelector((state) => state.post);
+  const { posts, status } = useSelector((state) => state.post);
   const { currentUser } = useSelector((state) => state.user);
   const { comments, loading } = useSelector((state) => state.comments);
   const { otherUser } = useSelector((state) => state.user);
@@ -43,6 +48,8 @@ const UserLanding = () => {
     (state) => state.user
   );
   const [file, setFile] = useState(null);
+
+
   const [newPost, setPost] = useState({
     title: "",
     author: currentUser ? currentUser._id : "",
@@ -93,6 +100,35 @@ const UserLanding = () => {
     dispatch(getPosts(currentUser?._id));
     // console.log(currentUser);
   }, [dispatch, currentUser]);
+
+  // Show skeleton for at least 1 second, then check if data is loaded
+  useEffect(() => {
+    const minLoadingTime = setTimeout(() => {
+      if (status === "success" || (posts && posts.length >= 0)) {
+        setIsInitialLoad(false);
+      }
+    }, 1000); // Show skeleton for at least 1 second
+
+    return () => clearTimeout(minLoadingTime);
+  }, []); // Only run once on mount
+
+  // Additional check for when data actually loads
+  useEffect(() => {
+    if (!isInitialLoad) return; // Don't run if already hidden
+
+    if (status === "success" && posts && posts.length >= 0) {
+      setTimeout(() => setIsInitialLoad(false), 300);
+    }
+  }, [status, posts, isInitialLoad]);
+
+  // Fallback: turn off skeleton after 3 seconds to prevent infinite loading
+  useEffect(() => {
+    const fallbackTimer = setTimeout(() => {
+      setIsInitialLoad(false);
+    }, 3000);
+
+    return () => clearTimeout(fallbackTimer);
+  }, []);
 
   useEffect(() => {
     dispatch(fetchSentRequests(currentUser?._id));
@@ -285,82 +321,85 @@ const UserLanding = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="flex items-center justify-between mb-4"
             >
-              <h3 className="text-white dark:text-gray-100 transition-colors duration-1000">
-                {currentUser && currentUser.name ? (
-                  <>Welcome {currentUser.name}</>
-                ) : (
-                  <>Please Sign In</>
-                )}
-              </h3>
-              <ThemeToggle />
+              <div className="ms-13">
+                <ThemeToggle />
+              </div>
+
             </motion.div>
             <Sidebar user={currentUser} />
           </div>
           {/* Add a Post Section */}
           <div className="col-span-2 px-3">
             <div className="my-3">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="max-w-3xl bg-white/10 dark:bg-gray-800/20 backdrop-blur-lg p-6 rounded-2xl shadow-md border border-white/20 dark:border-gray-700/30 transition-all duration-1000"
-              >
-                <h2 className="text-xl font-semibold text-white dark:text-gray-100 mb-4 transition-colors duration-1000">
-                  Create a Post
-                </h2>
-                <textarea
-                  className="w-full p-3 text-white dark:text-gray-100 bg-white/10 dark:bg-gray-700/30 border border-white/20 dark:border-gray-600/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent mb-2 placeholder-white/60 dark:placeholder-gray-400 transition-all duration-1000"
-                  placeholder="Title"
-                  rows="1"
-                  onChange={(e) => handlePostCreator(e)}
-                  value={newPost.title}
-                  name="title"
-                ></textarea>
-                <textarea
-                  className="w-full p-3 text-white dark:text-gray-100 bg-white/10 dark:bg-gray-700/30 border border-white/20 dark:border-gray-600/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-white/60 dark:placeholder-gray-400 transition-all duration-1000"
-                  placeholder="What's on your mind?"
-                  rows="4"
-                  onChange={(e) => handlePostCreator(e)}
-                  value={newPost.description}
-                  name="description"
-                ></textarea>
-                <div className="flex items-center justify-between mt-4">
-                  <label className="flex items-center gap-2 cursor-pointer text-purple-400 hover:text-purple-300 transition-colors duration-300">
-                    <div>
-                      <input
-                        type="file"
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
-                      <span className="text-sm font-medium flex items-center gap-2">
-                        <Avatar
-                          src={
-                            "https://img.icons8.com/?size=100&id=RxzRPd8sH7Ru&format=png&color=000000"
-                          }
+              {isInitialLoad ? (
+                <CreatePostSkeleton />
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                  className="max-w-3xl bg-white/10 dark:bg-gray-800/20 backdrop-blur-lg p-6 rounded-2xl shadow-md border border-white/20 dark:border-gray-700/30 transition-all duration-1000"
+                >
+                  <h2 className="text-xl font-semibold text-white dark:text-gray-100 mb-4 transition-colors duration-1000">
+                    Create a Post
+                  </h2>
+                  <textarea
+                    className="w-full p-3 text-white dark:text-gray-100 bg-white/10 dark:bg-gray-700/30 border border-white/20 dark:border-gray-600/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent mb-2 placeholder-white/60 dark:placeholder-gray-400 transition-all duration-1000"
+                    placeholder="Title"
+                    rows="1"
+                    onChange={(e) => handlePostCreator(e)}
+                    value={newPost.title}
+                    name="title"
+                  ></textarea>
+                  <textarea
+                    className="w-full p-3 text-white dark:text-gray-100 bg-white/10 dark:bg-gray-700/30 border border-white/20 dark:border-gray-600/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-white/60 dark:placeholder-gray-400 transition-all duration-1000"
+                    placeholder="What's on your mind?"
+                    rows="4"
+                    onChange={(e) => handlePostCreator(e)}
+                    value={newPost.description}
+                    name="description"
+                  ></textarea>
+                  <div className="flex items-center justify-between mt-4">
+                    <label className="flex items-center gap-2 cursor-pointer text-purple-400 hover:text-purple-300 transition-colors duration-300">
+                      <div>
+                        <input
+                          type="file"
+                          onChange={handleFileChange}
+                          className="hidden"
                         />
-                        Add Image
+                        <span className="text-sm font-medium flex items-center gap-2">
+                          <Avatar
+                            src={
+                              "https://img.icons8.com/?size=100&id=RxzRPd8sH7Ru&format=png&color=000000"
+                            }
+                          />
+                          Add Image
+                        </span>
+                      </div>
+                    </label>
+                    {selectedFileName && (
+                      <span className="text-sm text-white/80 dark:text-gray-300 truncate transition-colors duration-1000">
+                        {selectedFileName}
                       </span>
-                    </div>
-                  </label>
-                  {selectedFileName && (
-                    <span className="text-sm text-white/80 dark:text-gray-300 truncate transition-colors duration-1000">
-                      {selectedFileName}
-                    </span>
-                  )}
-                  <motion.button
-                    onClick={() => handlePostSubmit()}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white px-6 py-2 rounded-lg transition-all duration-300 shadow-lg hover:shadow-purple-500/25"
-                  >
-                    Post
-                  </motion.button>
-                </div>
-              </motion.div>
+                    )}
+                    <motion.button
+                      onClick={() => handlePostSubmit()}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white px-6 py-2 rounded-lg transition-all duration-300 shadow-lg hover:shadow-purple-500/25"
+                    >
+                      Post
+                    </motion.button>
+                  </div>
+                </motion.div>
+              )}
             </div>
             <hr className="mx-2 border-white/20 dark:border-gray-700/30 transition-colors duration-1000" />
+
             <div className="space-y-6">
-              {posts &&
+              {(status === "loading" || isInitialLoad) ? (
+                <PostSkeleton count={5} />
+              ) : posts && posts.length > 0 ? (
                 posts.map((post, index) => (
                   <motion.div
                     key={post._id}
@@ -406,11 +445,10 @@ const UserLanding = () => {
                         onClick={() => likeHandler(post._id)}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className={`flex items-center gap-2 p-2 rounded-lg transition-all duration-300 ${
-                          likedPosts.includes(post._id)
-                            ? "text-red-500 bg-red-500/20"
-                            : "text-white/70 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/10"
-                        }`}
+                        className={`flex items-center gap-2 p-2 rounded-lg transition-all duration-300 ${likedPosts.includes(post._id)
+                          ? "text-red-500 bg-red-500/20"
+                          : "text-white/70 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/10"
+                          }`}
                       >
                         <i className="fas fa-heart" />
                         <span className="font-medium">
@@ -461,12 +499,7 @@ const UserLanding = () => {
                           </div>
                         </div>
                         {loading ? (
-                          <div className="flex items-center justify-center py-4">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
-                            <span className="ml-2 text-white/70 dark:text-gray-300">
-                              Loading...
-                            </span>
-                          </div>
+                          <CommentSkeleton count={2} />
                         ) : comments.length > 0 ? (
                           <div className="mt-4 space-y-3">
                             {comments.map((comm) => (
@@ -502,7 +535,23 @@ const UserLanding = () => {
                       </motion.div>
                     )}
                   </motion.div>
-                ))}
+                ))
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
+                  className="text-center py-12 bg-white/5 dark:bg-gray-800/10 rounded-2xl border border-white/10 dark:border-gray-700/20"
+                >
+                  <div className="text-6xl mb-4">📝</div>
+                  <h3 className="text-white dark:text-gray-100 text-xl font-semibold mb-2">
+                    No posts yet
+                  </h3>
+                  <p className="text-white/60 dark:text-gray-400">
+                    Be the first to share something with your friends!
+                  </p>
+                </motion.div>
+              )}
             </div>
           </div>
           <div className="bg-white/10 dark:bg-gray-800/20 backdrop-blur-lg border-l border-white/20 dark:border-gray-700/30 p-6 transition-all duration-1000">
@@ -607,93 +656,92 @@ const UserLanding = () => {
                   </h3>
                   <div className="space-y-3">
                     {otherUser.map((user, index) => (
-                  <motion.div
-                    key={user._id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.1 }}
-                    className="flex items-center justify-between p-3 bg-white/5 dark:bg-gray-700/20 rounded-xl hover:bg-white/10 dark:hover:bg-gray-700/30 transition-all duration-300"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <Avatar
-                        size="sm"
-                        src={user.usrImgUrl || "https://placehold.co/100"}
-                      />
-                      <div>
-                        <p className="text-white dark:text-gray-100 font-medium transition-colors duration-1000">
-                          {user.name}
-                        </p>
-                        <p className="text-white/60 dark:text-gray-400 text-xs transition-colors duration-1000">
-                          Suggested for you
-                        </p>
-                      </div>
-                    </div>
-                    <motion.button
-                      onClick={() => {
-                        const isPending = sentRequest.some(
-                          (r) => r.receiverId === user._id
-                        );
-                        if (!isPending) {
-                          handleRequest(user._id);
-                        } else {
-                          const req = sentRequest.find(
-                            (r) => r.receiverId === user._id
-                          );
-                          if (req) handleUnsend(req.requestId);
-                        }
-                      }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`p-2 rounded-lg transition-all duration-300 ${
-                        !sentRequest.some((r) => r.receiverId === user._id)
-                          ? "bg-purple-500/20 hover:bg-purple-500/30 text-purple-400"
-                          : "bg-red-500/20 hover:bg-red-500/30 text-red-400"
-                      }`}
-                      title={
-                        !sentRequest.some((r) => r.receiverId === user._id)
-                          ? "Send friend request"
-                          : "Unsend request"
-                      }
-                    >
-                      {!sentRequest.some((r) => r.receiverId === user._id) ? (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth="1.5"
-                          stroke="currentColor"
-                          className="w-5 h-5"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z"
+                      <motion.div
+                        key={user._id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.1 }}
+                        className="flex items-center justify-between p-3 bg-white/5 dark:bg-gray-700/20 rounded-xl hover:bg-white/10 dark:hover:bg-gray-700/30 transition-all duration-300"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <Avatar
+                            size="sm"
+                            src={user.usrImgUrl || "https://placehold.co/100"}
                           />
-                        </svg>
-                      ) : (
-                        <motion.div
-                          initial={{ scale: 1 }}
-                          animate={{ scale: [1, 1.15, 1] }}
-                          transition={{ duration: 0.6 }}
+                          <div>
+                            <p className="text-white dark:text-gray-100 font-medium transition-colors duration-1000">
+                              {user.name}
+                            </p>
+                            <p className="text-white/60 dark:text-gray-400 text-xs transition-colors duration-1000">
+                              Suggested for you
+                            </p>
+                          </div>
+                        </div>
+                        <motion.button
+                          onClick={() => {
+                            const isPending = sentRequest.some(
+                              (r) => r.receiverId === user._id
+                            );
+                            if (!isPending) {
+                              handleRequest(user._id);
+                            } else {
+                              const req = sentRequest.find(
+                                (r) => r.receiverId === user._id
+                              );
+                              if (req) handleUnsend(req.requestId);
+                            }
+                          }}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className={`p-2 rounded-lg transition-all duration-300 ${!sentRequest.some((r) => r.receiverId === user._id)
+                            ? "bg-purple-500/20 hover:bg-purple-500/30 text-purple-400"
+                            : "bg-red-500/20 hover:bg-red-500/30 text-red-400"
+                            }`}
+                          title={
+                            !sentRequest.some((r) => r.receiverId === user._id)
+                              ? "Send friend request"
+                              : "Unsend request"
+                          }
                         >
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            strokeWidth="1.5"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
-                            />
-                          </svg>
-                        </motion.div>
-                      )}
-                    </motion.button>
-                  </motion.div>
+                          {!sentRequest.some((r) => r.receiverId === user._id) ? (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth="1.5"
+                              stroke="currentColor"
+                              className="w-5 h-5"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z"
+                              />
+                            </svg>
+                          ) : (
+                            <motion.div
+                              initial={{ scale: 1 }}
+                              animate={{ scale: [1, 1.15, 1] }}
+                              transition={{ duration: 0.6 }}
+                            >
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                strokeWidth="1.5"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
+                                />
+                              </svg>
+                            </motion.div>
+                          )}
+                        </motion.button>
+                      </motion.div>
                     ))}
                   </div>
                 </>
@@ -723,9 +771,8 @@ const UserLanding = () => {
                   </div>
                   <p className="mr-auto">Recent Activities</p>
                   <span
-                    className={`ml-4 transition-transform ${
-                      openDropdown.activity ? "rotate-180" : ""
-                    }`}
+                    className={`ml-4 transition-transform ${openDropdown.activity ? "rotate-180" : ""
+                      }`}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -771,9 +818,8 @@ const UserLanding = () => {
                         </div>
                         <p className="mr-auto">Recent Comments</p>
                         <span
-                          className={`ml-4 transition-transform ${
-                            openDropdown.comments ? "rotate-180" : ""
-                          }`}
+                          className={`ml-4 transition-transform ${openDropdown.comments ? "rotate-180" : ""
+                            }`}
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -842,9 +888,8 @@ const UserLanding = () => {
                         </div>
                         <p className="mr-auto">Recent Posts</p>
                         <span
-                          className={`ml-4 transition-transform ${
-                            openDropdown.posts ? "rotate-180" : ""
-                          }`}
+                          className={`ml-4 transition-transform ${openDropdown.posts ? "rotate-180" : ""
+                            }`}
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -905,9 +950,8 @@ const UserLanding = () => {
                         </div>
                         <p className="mr-auto">Recent Likes</p>
                         <span
-                          className={`ml-4 transition-transform ${
-                            openDropdown.likes ? "rotate-180" : ""
-                          }`}
+                          className={`ml-4 transition-transform ${openDropdown.likes ? "rotate-180" : ""
+                            }`}
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -984,9 +1028,8 @@ const UserLanding = () => {
                     Friend Requests ({receivingRequests.length})
                   </p>
                   <span
-                    className={`ml-4 transition-transform ${
-                      openDropdown.requests ? "rotate-180" : ""
-                    }`}
+                    className={`ml-4 transition-transform ${openDropdown.requests ? "rotate-180" : ""
+                      }`}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"

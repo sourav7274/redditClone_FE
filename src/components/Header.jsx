@@ -10,12 +10,6 @@ const Header = () => {
 
   const isActive = (path) => location.pathname === path;
 
-  const navItems = [
-    { name: "Home", path: "/" },
-    { name: "About", path: "/about" },
-    { name: "Contact", path: "/contact" },
-  ];
-
   return (
     <motion.header
       initial={{ opacity: 0, y: -50 }}
@@ -31,56 +25,22 @@ const Header = () => {
             transition={{ type: "spring", stiffness: 300 }}
           >
             <Link to="/" className="flex items-center space-x-2">
-              <motion.div
-                className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center"
+              <motion.img
+                src="/images/logo.png"
+                alt="Bondly Logo"
+                className="w-12 h-12 rounded-xl object-contain"
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.6 }}
-              >
-                <span className="text-white font-bold text-lg">R</span>
-              </motion.div>
+              />
               <Typography
                 variant="h4"
                 className="bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent font-bold"
               >
-                Reddit Clone
+                Bondly
               </Typography>
             </Link>
           </motion.div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            {navItems.map((item, index) => (
-              <motion.div
-                key={item.name}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Link
-                  to={item.path}
-                  className={`relative px-3 py-2 text-sm font-medium transition-all duration-300 ${
-                    isActive(item.path)
-                      ? "text-white"
-                      : "text-white/70 hover:text-white"
-                  }`}
-                >
-                  {item.name}
-                  {isActive(item.path) && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute inset-0 bg-white/20 rounded-lg -z-10"
-                      initial={false}
-                      transition={{
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 30,
-                      }}
-                    />
-                  )}
-                </Link>
-              </motion.div>
-            ))}
-          </nav>
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center space-x-4">
@@ -162,29 +122,6 @@ const Header = () => {
           className="md:hidden overflow-hidden"
         >
           <div className="py-4 space-y-2">
-            {navItems.map((item, index) => (
-              <motion.div
-                key={item.name}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{
-                  opacity: isMenuOpen ? 1 : 0,
-                  x: isMenuOpen ? 0 : -20,
-                }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-              >
-                <Link
-                  to={item.path}
-                  onClick={() => setIsMenuOpen(false)}
-                  className={`block px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                    isActive(item.path)
-                      ? "text-white bg-white/20"
-                      : "text-white/70 hover:text-white hover:bg-white/10"
-                  }`}
-                >
-                  {item.name}
-                </Link>
-              </motion.div>
-            ))}
             <div className="pt-4 space-y-2">
               <div className="flex justify-center mb-4">
                 <ThemeToggle />

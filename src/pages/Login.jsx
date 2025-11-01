@@ -100,6 +100,21 @@ export default function Login() {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="text-center mb-8"
           >
+            {/* Logo */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="flex justify-center mb-6"
+            >
+              <motion.img
+                src="/images/logo.png"
+                alt="Bondly Logo"
+                className="w-16 h-16 rounded-xl object-contain"
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.6 }}
+              />
+            </motion.div>
             <Typography
               variant="h3"
               className="mb-2 bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent font-bold"
